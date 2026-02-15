@@ -1319,6 +1319,193 @@
   .model-delta-up   { color: var(--danger); }
   .model-delta-down { color: var(--accent3); }
   .model-delta-same { color: var(--muted); }
+
+  /* ── RACE STRATEGY PANEL ── */
+  .strategy-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid rgba(57,255,140,0.2);
+    border-radius: 16px;
+    padding: 28px 32px;
+    animation: fadeSlideIn 0.5s ease both;
+    animation-delay: 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .strategy-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent), transparent);
+  }
+  .strategy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .strategy-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--accent3);
+  }
+  .strategy-meta {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted2);
+    margin-top: 3px;
+  }
+  .strategy-confidence {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .strategy-conf-pip {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Side call banner */
+  .side-call {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .side-card {
+    flex: 1;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .side-card.favored {
+    background: rgba(57,255,140,0.07);
+    border: 1px solid rgba(57,255,140,0.25);
+  }
+  .side-card.avoid {
+    background: rgba(90,122,154,0.06);
+    border: 1px solid rgba(90,122,154,0.18);
+  }
+  .side-card.split {
+    background: rgba(255,184,48,0.06);
+    border: 1px solid rgba(255,184,48,0.2);
+  }
+  .side-icon {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .side-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .side-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .side-card.favored .side-name { color: var(--accent3); }
+  .side-card.split    .side-name { color: var(--warn); }
+  .side-reason {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+
+  /* Strategy sections */
+  .strategy-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 700px) { .strategy-sections { grid-template-columns: 1fr; } }
+
+  .strategy-section {
+    background: rgba(10,20,40,0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .strategy-section-title {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .strategy-bullets {
+    list-style: none;
+    padding: 0; margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .strategy-bullet {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    padding-left: 16px;
+    position: relative;
+  }
+  .strategy-bullet::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent3);
+    font-size: 10px;
+  }
+  .strategy-bullet.warn::before { color: var(--warn); }
+  .strategy-bullet.danger::before { color: var(--danger); }
+
+  /* Narrative paragraph */
+  .strategy-narrative {
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 4px;
+  }
+  .strategy-narrative strong { color: var(--accent3); }
+  .strategy-narrative em { color: var(--warn); font-style: normal; }
+
+  /* Alerts */
+  .strategy-alert {
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.7;
+    display: none;
+  }
+  .strategy-alert.danger {
+    background: rgba(255,61,90,0.08);
+    border: 1px solid rgba(255,61,90,0.25);
+    color: var(--danger);
+  }
+  .strategy-alert.warn {
+    background: rgba(255,184,48,0.07);
+    border: 1px solid rgba(255,184,48,0.2);
+    color: var(--warn);
+  }
 </style>
 </head>
 <body>
@@ -1391,7 +1578,7 @@
     </div>
 
     <div class="race-meter" style="width:100%;margin-top:16px;">
-      <div class="meter-label">MUI Condition Score</div>
+      <div class="meter-label">Race Condition Score</div>
       <div class="meter-score" id="raceScore">—</div>
       <div class="meter-description" id="raceDesc">Loading conditions...</div>
       <div class="meter-bar-wrap" style="margin-top:10px;">
@@ -1705,6 +1892,53 @@
   </div>
 
   <!-- MOBILE / iOS NOTICE -->
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- RACE STRATEGY PANEL                            -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="strategy-panel" id="strategyPanel" style="display:none;">
+    <div class="strategy-header">
+      <div>
+        <div class="strategy-title">⛵ Race Strategy Brief</div>
+        <div class="strategy-meta" id="strategyMeta">Windward-leeward one-design · Chicago lakefront · Updated on data load</div>
+      </div>
+      <div class="strategy-confidence">
+        <div class="strategy-conf-pip" id="strategyConfPip"></div>
+        <span id="strategyConfLabel"></span>
+      </div>
+    </div>
+
+    <!-- Safety / advisory alert -->
+    <div class="strategy-alert danger" id="strategyDangerAlert"></div>
+    <div class="strategy-alert warn"   id="strategyWarnAlert"></div>
+
+    <!-- Side call -->
+    <div class="side-call" id="strategySideCall"></div>
+
+    <!-- Tactic sections grid -->
+    <div class="strategy-sections">
+      <div class="strategy-section">
+        <div class="strategy-section-title">🏁 Start Line</div>
+        <ul class="strategy-bullets" id="strategyStart"></ul>
+      </div>
+      <div class="strategy-section">
+        <div class="strategy-section-title">⬆ Upwind Leg</div>
+        <ul class="strategy-bullets" id="strategyUpwind"></ul>
+      </div>
+      <div class="strategy-section">
+        <div class="strategy-section-title">⬇ Downwind Leg</div>
+        <ul class="strategy-bullets" id="strategyDownwind"></ul>
+      </div>
+      <div class="strategy-section">
+        <div class="strategy-section-title">👁 Watch For</div>
+        <ul class="strategy-bullets" id="strategyWatch"></ul>
+      </div>
+    </div>
+
+    <!-- Full narrative -->
+    <div class="strategy-narrative" id="strategyNarrative"></div>
+  </div>
+
+  <!-- MOBILE / iOS NOTICE (original) -->
   <div class="mobile-notice">
     <div class="notice-icon">📱</div>
     <div class="notice-content">
@@ -2765,6 +2999,9 @@ function renderPrediction(data) {
       </div>
     </div>
   `).join('');
+
+  // Render strategy brief
+  renderStrategy(data, p);
 }
 
 // Also add to loadDemoData's prediction section
@@ -3140,6 +3377,300 @@ function getModelSpreadPenalty() {
   );
   if (!spread) return 0;
   return spread.highSpread ? -10 : 0;
+}
+
+// ═══════════════════════════════════════════════════
+//  RACE STRATEGY ENGINE
+//  Windward-leeward one-design buoy race, Chicago
+//  lakefront. Synthesizes all available signals into
+//  actionable tactical advice.
+// ═══════════════════════════════════════════════════
+
+/**
+ * Determine left/right/split bias from wind direction and predicted shift.
+ * On a W-L course the windward mark is directly upwind.
+ * Left = port tack favored, Right = starboard tack favored.
+ *
+ * Chicago-specific rules:
+ * - SW/W/NW: right (starboard) favored — pressure builds from the west shore,
+ *   oscillating shifts are typically larger to the right
+ * - S/SSW: left (port) favored — southerly lifts port tack toward the mark,
+ *   lake breeze often fills from right later (timing matters)
+ * - NE/E (lake breeze): right (starboard) strongly favored — breeze fills from
+ *   the east/right side first, stay with the new breeze
+ * - N/NW post-frontal: right favored — pressure line comes from NW
+ * - Veering (clockwise): favors starboard (right)
+ * - Backing (counter-clockwise): favors port (left)
+ */
+function computeSideBias(currentDir, predDir30, predDir60, dirOscil, sp, hourCST) {
+  const dir = degToCompass(currentDir);
+  const shift30 = circDiff(currentDir, predDir30); // + = veer, - = back
+  const shift60 = circDiff(currentDir, predDir60);
+
+  // Lake breeze probability this hour
+  const lbProb = (sp.lakeBreezeProbByHour || Array(24).fill(0))[hourCST] || 0;
+
+  let bias = 0;    // + = right, - = left, magnitude = confidence
+  let reasons = [];
+
+  // 1. Current direction bias (Chicago-specific)
+  if (['W','WNW','NW','NNW'].includes(dir)) {
+    bias += 2; reasons.push('W/NW winds: pressure typically builds right side first');
+  } else if (['SW','WSW'].includes(dir)) {
+    bias += 1; reasons.push('SW flow: slight right bias, watch for oscillations');
+  } else if (['S','SSW','SSE'].includes(dir)) {
+    bias -= 2; reasons.push('Southerly: port tack lifted toward mark, go left');
+  } else if (['SE','E','ENE'].includes(dir)) {
+    bias -= 1; reasons.push('SE/E: port tack favored, breeze may back further');
+  } else if (['NE','NNE'].includes(dir)) {
+    bias += 3; reasons.push('NE lake breeze: stay right — breeze fills from starboard side');
+  } else if (['N'].includes(dir)) {
+    bias += 1; reasons.push('N wind: slight right bias from lake effect');
+  }
+
+  // 2. Predicted shift direction
+  if (shift30 > 8) {
+    bias += 2; reasons.push(`Wind veering ${shift30.toFixed(0)}° in 30 min — starboard (right) tack gains lift`);
+  } else if (shift30 < -8) {
+    bias -= 2; reasons.push(`Wind backing ${Math.abs(shift30).toFixed(0)}° in 30 min — port (left) tack gains lift`);
+  }
+
+  // 3. Lake breeze transition
+  if (lbProb > 40 && ['S','SSW','SW','SSE','SE'].includes(dir)) {
+    bias += 2;
+    reasons.push(`${lbProb}% lake breeze probability — NE fill incoming from right side`);
+  }
+
+  // 4. High oscillation: split the course
+  if (dirOscil > 12) {
+    reasons.push(`High oscillation ±${dirOscil.toFixed(0)}° — don't over-commit, play shifts`);
+  }
+
+  const sideLabel = Math.abs(bias) >= 3 ? 'STRONGLY ' : Math.abs(bias) >= 2 ? '' : 'SLIGHT ';
+  const side      = bias > 1 ? 'RIGHT' : bias < -1 ? 'LEFT' : 'SPLIT';
+  const sideConf  = Math.min(90, Math.abs(bias) * 18 + 20);
+
+  return { bias, side, sideLabel, sideConf, reasons, shift30, shift60, lbProb };
+}
+
+/**
+ * Main strategy generator. Returns structured strategy object.
+ */
+function generateStrategy(data, predResult) {
+  if (!data || data.length < 15 || !predResult) return null;
+
+  const p       = predResult;
+  const latest  = data[data.length - 1];
+  const sp      = getSeasonalProfile();
+  const now     = new Date();
+  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const dir     = degToCompass(latest.dir);
+  const spd     = latest.spdKts;
+  const gust    = latest.gstKts;
+
+  // Gather NWS shift data if available
+  const nwsShift = nwsForecastData && nwsForecastData.find(p => p.hasShift);
+
+  // Side bias
+  const sb = computeSideBias(latest.dir, p.predDir30, p.predDir, p.dirOscil, sp, hourCST);
+
+  // Wind conditions characterisation
+  const isLightAir   = spd < 7;
+  const isMedium     = spd >= 7 && spd < 14;
+  const isHeavy      = spd >= 14;
+  const isGusty      = p.avgGustRatio > 1.35;
+  const isOscillating = p.dirOscil > 10;
+  const isBuilding   = p.spdDelta30 > 1.5;
+  const isFading     = p.spdDelta30 < -1.5;
+  const isVeering    = sb.shift30 > 6;
+  const isBacking    = sb.shift30 < -6;
+  const lbFiring     = sb.lbProb > 45 && ['S','SSW','SW','SSE','SE'].includes(dir);
+  const postFrontal  = ['NW','NNW','WNW','W'].includes(dir) && spd > 8;
+
+  // ── ALERTS ──
+  let dangerAlert = null;
+  let warnAlert   = null;
+
+  if (sp.thunderstormRisk === 'high' && hourCST >= 13 && hourCST <= 20) {
+    dangerAlert = `⛈ SAFETY: ${sp.name} peak thunderstorm window (${hourCST}:00 CST). Monitor radar before and during racing. MCS squall lines can produce 40–60 kt winds with little warning. Have an escape plan.`;
+  }
+  if (nwsForecastData && nwsForecastData.some(p => p.hasAdvisory)) {
+    dangerAlert = (dangerAlert || '') + (dangerAlert ? ' ' : '') + `⚠ NWS Small Craft Advisory or Warning in effect for LMZ740–742. Review conditions carefully.`;
+  }
+  if (gust > 22) {
+    warnAlert = `Gusting to ${gust.toFixed(0)} kts currently. Expect ${p.predGust30.toFixed(0)}–${p.predGust.toFixed(0)} kt gusts over the race. Reef decision: ${gust > 28 ? 'strongly consider reducing sail' : 'monitor — may want to reef on longer races'}.`;
+  }
+  if (isLightAir) {
+    warnAlert = (warnAlert || '') + (warnAlert ? ' ' : '') + `Light air (${spd.toFixed(1)} kts) — patience required. Avoid tacking in holes.`;
+  }
+
+  // ── START LINE ──
+  const startBullets = [];
+  if (sb.side === 'RIGHT') {
+    startBullets.push(`Starboard end (pin end) favored — line up for a starboard tack start near the pin to access the right side immediately`);
+    startBullets.push(`Look for boats stacking at committee boat — pressure on pin, may be less crowded`);
+  } else if (sb.side === 'LEFT') {
+    startBullets.push(`Port end (committee boat) favored — position for a starboard start near the committee boat to immediately tack to port`);
+    startBullets.push(`Early port tack flyer is valid if the left shift materializes before the gun`);
+  } else {
+    startBullets.push(`Course is relatively square — start near mid-line and look for first puff to commit to a side`);
+    startBullets.push(`Avoid the laylines early — keep options open in the first 2–3 minutes`);
+  }
+  if (isGusty) startBullets.push(`Gusty conditions: start with speed rather than position — a slow start in a gust is hard to recover`);
+  if (isLightAir) startBullets.push(`Light air: avoid barging, protect your lane, don't get caught in bad air near the line`);
+  if (isHeavy) startBullets.push(`Heavy air: time your approach carefully, a late run-in with speed beats a slow early start`);
+
+  // ── UPWIND ──
+  const upwindBullets = [];
+  if (sb.side === 'RIGHT') {
+    upwindBullets.push(`Prioritize the right side — sail to the starboard layline before tacking back`);
+    if (isVeering) upwindBullets.push(`Wind veering: each lift on starboard is real — don't tack on headers, wait for the lift to max out`);
+  } else if (sb.side === 'LEFT') {
+    upwindBullets.push(`Get to the left side early — tack to port as soon as you have clear air off the start`);
+    if (isBacking) upwindBullets.push(`Wind backing: each lift on port is real — hold your port tack until headers come`);
+  } else {
+    upwindBullets.push(`Play the oscillating shifts: tack on headers, lift on your current tack`);
+    upwindBullets.push(`Current oscillation ±${p.dirOscil.toFixed(0)}° — shifts are approximately ${sp.shiftFreqPerHr > 1.5 ? 'frequent (~' + sp.shiftFreqPerHr + '/hr)' : 'moderate'}`);
+  }
+  if (lbFiring) upwindBullets.push(`Lake breeze filling from right (NE) — if you see chop line offshore, get to starboard tack immediately`);
+  if (isBuilding) upwindBullets.push(`Breeze building (+${p.spdDelta30.toFixed(1)} kts predicted at +30 min) — upwind boat speed will increase through the leg`);
+  if (isFading) upwindBullets.push(`Breeze fading (${p.spdDelta30.toFixed(1)} kts predicted at +30 min) — extend on the favored tack now before conditions deteriorate`);
+  if (postFrontal) upwindBullets.push(`Post-frontal NW flow: expect pressure lines — sail in the darker water (more pressure), avoid lighter patches`);
+  if (nwsShift) upwindBullets.push(`NWS forecast: wind ${nwsShift.windDir} becoming ${nwsShift.shiftDir} — plan your approach to the windward mark around this transition`);
+
+  // ── DOWNWIND ──
+  const downwindBullets = [];
+  const downwindDir = ((latest.dir + 180) % 360); // approximate running direction
+  const ddComp = degToCompass(downwindDir);
+
+  if (['W','NW','WNW','SW','NNW'].includes(dir)) {
+    downwindBullets.push(`W/NW running: gybe set to starboard, stay on port jibe initially to build speed, gybe in the shifts`);
+    downwindBullets.push(`Look for pressure on the right side of the run — puffs fill from the west, sail toward them`);
+  } else if (['S','SSW','SSE','SE'].includes(dir)) {
+    downwindBullets.push(`Southerly running: jibe angle is key — sail hot to maintain VMG, avoid a deep run in light/fading air`);
+    if (lbFiring) downwindBullets.push(`Lake breeze transition on the run is dangerous — if the NE fills, your angle changes dramatically, stay ready to gybe`);
+  } else if (['NE','E','ENE'].includes(dir)) {
+    downwindBullets.push(`NE running: go low on starboard jibe (left side of run) to get into pressure; come back right to avoid leeward boat pile-up at the mark`);
+  }
+  if (isGusty) downwindBullets.push(`Gusty: surf the puffs — don't fight to stay high, let the boat run in the gusts`);
+  if (isHeavy) downwindBullets.push(`Heavy air run: keep crew weight aft, gybe early before the leeward mark to avoid the crash-gybe pile-up`);
+  if (isLightAir) downwindBullets.push(`Light air: stay high of thumb line, maximize apparent wind, gybe in the pressure`);
+
+  // ── WATCH FOR ──
+  const watchBullets = [];
+  watchBullets.push(`Next refresh in ~5 min — direction predicted ${sb.shift30 > 0 ? 'veering +' : ''}${sb.shift30.toFixed(0)}° over next 30 min`);
+  if (sp.thunderstormRisk === 'high') watchBullets.push(`Afternoon convection: keep one eye on the western horizon from about ${Math.max(13, hourCST + 1)}:00 CST onward`);
+  if (lbFiring || sb.lbProb > 25) watchBullets.push(`Lake breeze front: look for a chop line and wind shadow ~0.5–2 nm offshore — when the front crosses, NE fills quickly`);
+  if (isOscillating) watchBullets.push(`High oscillation: watch compass obsessively upwind, tack on every 10°+ header`);
+  if (p.conf <= 40) watchBullets.push(`Low prediction confidence (${p.conf}%) — conditions are hard to forecast, stay flexible and avoid long commitments to either side`);
+  if (postFrontal) watchBullets.push(`Post-frontal: watch for pressure lines visible as dark streaks on the water — sail into them`);
+  if (isGusty && sp.thunderstormRisk !== 'low') watchBullets.push(`Gust ratio ${p.avgGustRatio.toFixed(2)}x — could indicate convective activity approaching`);
+  watchBullets.push(`HRRR model at +60 min: ${degToCompass(p.predDir)} ${p.predSpd.toFixed(0)} kts — gives picture of post-race conditions`);
+
+  // ── NARRATIVE ──
+  const conditionSummary = isHeavy ? `heavy air (${spd.toFixed(0)} kts, gusting ${gust.toFixed(0)})` :
+                           isMedium ? `moderate breeze (${spd.toFixed(0)} kts)` :
+                           `light air (${spd.toFixed(0)} kts)`;
+
+  const shiftSummary = Math.abs(sb.shift30) > 6
+    ? `The wind is ${sb.shift30 > 0 ? 'veering clockwise' : 'backing counter-clockwise'}, predicted to shift ${Math.abs(sb.shift30).toFixed(0)}° over the next 30 minutes.`
+    : `Direction is relatively stable — oscillating ±${p.dirOscil.toFixed(0)}° around ${dir}.`;
+
+  const lakeBreezeNote = lbFiring
+    ? ` <em>Lake breeze transition likely this race</em> — the thermal gradient is strong enough to fire a NE fill, which will completely reset the playing field. Get to the right side before it arrives.`
+    : sb.lbProb > 20
+    ? ` Lake breeze probability is ${sb.lbProb}% this hour — possible but not certain. Watch the offshore chop line.`
+    : '';
+
+  const narrative = `
+    Current conditions: <strong>${dir} at ${spd.toFixed(1)} kts, gusting ${gust.toFixed(1)} kts</strong> — ${conditionSummary}.
+    ${shiftSummary}${lakeBreezeNote}
+    <br><br>
+    <strong>Primary call: ${sb.sideLabel}${sb.side === 'SPLIT' ? 'SPLIT THE COURSE' : sb.side + ' SIDE'}.</strong>
+    ${sb.reasons.slice(0, 2).join('. ')}.
+    ${nwsShift ? `NWS human forecaster shows wind becoming <strong>${nwsShift.shiftDir}</strong> during ${nwsShift.name} — factor this into your mark approach.` : ''}
+    <br><br>
+    At 30 minutes the HRRR model and statistical ensemble agree the wind will be
+    <strong>${degToCompass(p.predDir30)} at ${p.predSpd30.toFixed(1)} kts</strong>
+    (confidence: ${p.conf30}%).
+    At 60 minutes: <strong>${degToCompass(p.predDir)} at ${p.predSpd.toFixed(1)} kts</strong>
+    (confidence: ${p.conf}%).
+    ${p.conf30 - p.conf > 8 ? `The drop in confidence from 30 to 60 minutes is significant — <em>prioritize the 30-min prediction for race decisions.</em>` : ''}
+  `.trim();
+
+  return {
+    side: sb.side, sideLabel: sb.sideLabel, sideConf: sb.sideConf,
+    sideReasons: sb.reasons,
+    dangerAlert, warnAlert,
+    startBullets, upwindBullets, downwindBullets, watchBullets,
+    narrative,
+    conf: p.conf, confLevel: p.confLevel, confColor: p.confColor
+  };
+}
+
+function renderStrategy(data, predResult) {
+  const panel = document.getElementById('strategyPanel');
+  const s = generateStrategy(data, predResult);
+  if (!s) { panel.style.display = 'none'; return; }
+
+  panel.style.display = 'block';
+
+  // Meta
+  const now = new Date();
+  document.getElementById('strategyMeta').textContent =
+    `W-L one-design · Chicago lakefront · ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+
+  // Confidence pip
+  document.getElementById('strategyConfPip').style.background = s.confColor;
+  document.getElementById('strategyConfLabel').textContent = `${s.confLevel} confidence`;
+  document.getElementById('strategyConfLabel').style.color = s.confColor;
+
+  // Alerts
+  const dangerEl = document.getElementById('strategyDangerAlert');
+  const warnEl   = document.getElementById('strategyWarnAlert');
+  if (s.dangerAlert) { dangerEl.style.display = 'block'; dangerEl.innerHTML = s.dangerAlert; }
+  else dangerEl.style.display = 'none';
+  if (s.warnAlert) { warnEl.style.display = 'block'; warnEl.innerHTML = s.warnAlert; }
+  else warnEl.style.display = 'none';
+
+  // Side call
+  const sideIcon  = s.side === 'RIGHT' ? '→' : s.side === 'LEFT' ? '←' : '↔';
+  const sideClass = s.side === 'RIGHT' ? 'favored' : s.side === 'LEFT' ? 'favored' : 'split';
+  const avoidSide = s.side === 'RIGHT' ? 'LEFT' : s.side === 'LEFT' ? 'RIGHT' : '—';
+
+  document.getElementById('strategySideCall').innerHTML = `
+    <div class="side-card ${sideClass}">
+      <div class="side-icon">${sideIcon}</div>
+      <div>
+        <div class="side-label">Favored Side</div>
+        <div class="side-name">${s.side === 'SPLIT' ? 'SPLIT' : s.side + ' SIDE'}</div>
+        <div class="side-reason">${s.sideReasons.slice(0,2).join(' · ')}</div>
+      </div>
+    </div>
+    ${s.side !== 'SPLIT' ? `
+    <div class="side-card avoid" style="max-width:180px;">
+      <div>
+        <div class="side-label">Avoid / Secondary</div>
+        <div class="side-name" style="font-size:16px;color:var(--muted);">${avoidSide}</div>
+        <div class="side-reason">Unless significant shift materializes</div>
+      </div>
+    </div>` : ''}
+  `;
+
+  // Bullets helper
+  function renderBullets(id, bullets, warnIdxs = [], dangerIdxs = []) {
+    document.getElementById(id).innerHTML = bullets.map((b, i) => {
+      const cls = dangerIdxs.includes(i) ? 'danger' : warnIdxs.includes(i) ? 'warn' : '';
+      return `<li class="strategy-bullet ${cls}">${b}</li>`;
+    }).join('');
+  }
+  renderBullets('strategyStart',    s.startBullets);
+  renderBullets('strategyUpwind',   s.upwindBullets);
+  renderBullets('strategyDownwind', s.downwindBullets);
+  renderBullets('strategyWatch',    s.watchBullets, [0,1,2,3]);
+
+  // Narrative
+  document.getElementById('strategyNarrative').innerHTML = s.narrative;
 }
 
 // ═══════════════════════════════════════════════════
