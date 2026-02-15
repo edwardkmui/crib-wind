@@ -2352,7 +2352,7 @@ function computePrediction(data) {
 
   // ── SIGNAL 6: Gust ratio model ──
   const avgGustRatio = gusts30.reduce((s, g, i) => s + g / Math.max(spds30[i], 0.5), 0) / gusts30.length;
-  const predGust = Math.max(predSpd, predSpd * avgGustRatio);
+  let predGust = Math.max(predSpd, predSpd * avgGustRatio);
 
   // ── SIGNAL 7: Local knowledge adjustment ──
   const now = new Date();
