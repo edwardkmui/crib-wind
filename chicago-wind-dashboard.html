@@ -1083,6 +1083,104 @@
 
   .disclaimer-bar strong { color: var(--warn); }
 
+  /* ── DUAL HORIZON PREDICTION ── */
+  .horizon-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .horizon-tab {
+    padding: 6px 18px;
+    border-radius: 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: default;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    background: transparent;
+    transition: all 0.2s;
+  }
+  .horizon-tab.primary {
+    background: rgba(0,212,255,0.1);
+    border-color: rgba(0,212,255,0.4);
+    color: var(--accent);
+  }
+  .horizon-tab.secondary {
+    background: rgba(90,122,154,0.08);
+    border-color: rgba(90,122,154,0.2);
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .horizon-section-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+  .pred-30-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .pred-30-card {
+    background: rgba(0,212,255,0.04);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .pred-30-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .pred-30-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .pred-30-unit {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .pred-30-delta {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .pred-60-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 14px;
+    color: var(--muted2);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .pred-60-divider::before, .pred-60-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .conf-improvement {
+    font-size: 10px;
+    color: var(--accent3);
+    margin-top: 4px;
+    text-align: center;
+  }
+
   /* ── MARINE FORECAST PANELS ── */
   .marine-grid {
     grid-column: 1 / -1;
@@ -1293,7 +1391,7 @@
     </div>
 
     <div class="race-meter" style="width:100%;margin-top:16px;">
-      <div class="meter-label">Race Condition Score</div>
+      <div class="meter-label">MUI Condition Score</div>
       <div class="meter-score" id="raceScore">—</div>
       <div class="meter-description" id="raceDesc">Loading conditions...</div>
       <div class="meter-bar-wrap" style="margin-top:10px;">
@@ -1456,6 +1554,39 @@
       </div>
       <div class="pred-timestamp" id="predTimestamp">—</div>
     </div>
+
+    <!-- Horizon tabs -->
+    <div class="horizon-tabs">
+      <div class="horizon-tab primary">▶ +30 min · Race Start Window</div>
+      <div class="horizon-tab secondary">+60 min · Race Planning</div>
+    </div>
+
+    <!-- 30-MINUTE PRIMARY CARDS -->
+    <div class="horizon-section-label">30-minute prediction — higher confidence</div>
+    <div class="pred-30-row">
+      <div class="pred-30-card">
+        <div class="pred-30-label">Speed +30 min</div>
+        <div class="pred-30-value" id="pred30Spd" style="color:var(--accent)">—</div>
+        <div class="pred-30-unit">KNOTS</div>
+        <div class="pred-30-delta" id="pred30SpdDelta">—</div>
+      </div>
+      <div class="pred-30-card">
+        <div class="pred-30-label">Direction +30 min</div>
+        <div class="pred-30-value" id="pred30DirArrow" style="font-size:28px;">—</div>
+        <div class="pred-30-unit" id="pred30Dir">—</div>
+        <div class="pred-30-delta" id="pred30DirDelta">—</div>
+      </div>
+      <div class="pred-30-card">
+        <div class="pred-30-label">Gust +30 min</div>
+        <div class="pred-30-value" id="pred30Gust" style="color:var(--warn)">—</div>
+        <div class="pred-30-unit">KNOTS</div>
+        <div class="pred-30-delta" id="pred30GustDelta">—</div>
+      </div>
+    </div>
+    <div class="conf-improvement" id="confImprovementNote"></div>
+
+    <!-- 60-MINUTE SECONDARY CARDS -->
+    <div class="pred-60-divider">60-minute outlook · lower confidence</div>
 
     <!-- Main prediction cards -->
     <div class="pred-main-row">
@@ -2316,26 +2447,32 @@ function computePrediction(data) {
   // ── SIGNAL 1: Linear regression on speed (60-obs window) ──
   const spdReg60  = linReg(spds60);
   // Project 30 steps ahead (= +60 min of 2-min data)
-  const stepsAhead = 30;
-  const spdLR60 = spdReg60.intercept + spdReg60.slope * (spds60.length - 1 + stepsAhead);
+  const stepsAhead60 = 30;
+  const stepsAhead30 = 15;
+  const spdLR60 = spdReg60.intercept + spdReg60.slope * (spds60.length - 1 + stepsAhead60);
 
   // ── SIGNAL 2: Linear regression on speed (30-obs window) ──
   const spdReg30  = linReg(spds30);
-  const spdLR30 = spdReg30.intercept + spdReg30.slope * (spds30.length - 1 + stepsAhead);
+  const spdLR30 = spdReg30.intercept + spdReg30.slope * (spds30.length - 1 + stepsAhead60);
+
+  // ── For 30-min horizon: same signals projected 15 steps ──
+  const spdLR60_30 = spdReg60.intercept + spdReg60.slope * (spds60.length - 1 + stepsAhead30);
+  const spdLR30_30 = spdReg30.intercept + spdReg30.slope * (spds30.length - 1 + stepsAhead30);
 
   // ── SIGNAL 3: EWMA-based extrapolation ──
   const ewmaSpd  = ewma(spds30, 0.12);
   const spdTrend = spds30[spds30.length - 1] - spds30[0]; // raw trend over 30 obs
   const spdEWMA  = Math.max(0, ewmaSpd + spdTrend * 0.35);
+  const spdEWMA30 = Math.max(0, ewmaSpd + spdTrend * 0.175); // half trend for 30-min
 
   // ── SIGNAL 4: Acceleration (2nd derivative of speed) ──
   const accel10  = window10.slice(-5).map(d => d.spdKts);
   const accel10b = window10.slice(0, 5).map(d => d.spdKts);
   const accelSignal = (accel10.reduce((s,v)=>s+v,0)/5) - (accel10b.reduce((s,v)=>s+v,0)/5);
-  const spdAccel = latest.spdKts + accelSignal * 3; // extrapolate acceleration 30 steps
+  const spdAccel   = latest.spdKts + accelSignal * 3;   // 60-min
+  const spdAccel30 = latest.spdKts + accelSignal * 1.5; // 30-min
 
-  // ── ENSEMBLE SPEED (weighted) ──
-  // Weight by r² of each regression + trust EWMA for stable conditions
+  // ── ENSEMBLE SPEED 60-min (weighted) ──
   const w1 = 0.30 * spdReg60.r2 + 0.05;
   const w2 = 0.25 * spdReg30.r2 + 0.05;
   const w3 = 0.25;
@@ -2344,40 +2481,59 @@ function computePrediction(data) {
   let predSpd = (w1 * spdLR60 + w2 * spdLR30 + w3 * spdEWMA + w4 * spdAccel) / wTotal;
   predSpd = Math.max(0, predSpd);
 
+  // ── ENSEMBLE SPEED 30-min (same weights, 30-min projections) ──
+  let predSpd30 = (w1 * spdLR60_30 + w2 * spdLR30_30 + w3 * spdEWMA30 + w4 * spdAccel30) / wTotal;
+  predSpd30 = Math.max(0, predSpd30);
+
   // ── SIGNAL 5: Direction prediction ──
-  const dirPred60 = predictDirection(dirs60, stepsAhead);
-  const dirPred30 = predictDirection(dirs30, stepsAhead);
-  // Weighted blend
-  const dw1 = dirPred60.r2 + 0.1, dw2 = dirPred30.r2 + 0.1;
-  const blendedDir = dirPred60.predDeg + circDiff(dirPred60.predDeg, dirPred30.predDeg) * (dw2 / (dw1 + dw2));
+  const stepsAhead = stepsAhead60; // keep for back-compat signal cards
+  const dirPred60 = predictDirection(dirs60, stepsAhead60);
+  const dirPred30_60 = predictDirection(dirs30, stepsAhead60);
+  const dirPred30_30 = predictDirection(dirs30, stepsAhead30);
+  const dirPred60_30 = predictDirection(dirs60, stepsAhead30);
+
+  // 60-min blended direction
+  const dw1 = dirPred60.r2 + 0.1, dw2 = dirPred30_60.r2 + 0.1;
+  const blendedDir = dirPred60.predDeg + circDiff(dirPred60.predDeg, dirPred30_60.predDeg) * (dw2 / (dw1 + dw2));
   let predDir = ((blendedDir % 360) + 360) % 360;
+
+  // 30-min blended direction
+  const dw1_30 = dirPred60_30.r2 + 0.1, dw2_30 = dirPred30_30.r2 + 0.1;
+  const blendedDir30 = dirPred60_30.predDeg + circDiff(dirPred60_30.predDeg, dirPred30_30.predDeg) * (dw2_30 / (dw1_30 + dw2_30));
+  let predDir30 = ((blendedDir30 % 360) + 360) % 360;
 
   // ── SIGNAL 6: Gust ratio model ──
   const avgGustRatio = gusts30.reduce((s, g, i) => s + g / Math.max(spds30[i], 0.5), 0) / gusts30.length;
-  let predGust = Math.max(predSpd, predSpd * avgGustRatio);
+  let predGust   = Math.max(predSpd,   predSpd   * avgGustRatio);
+  let predGust30 = Math.max(predSpd30, predSpd30 * avgGustRatio);
 
   // ── SIGNAL 7: Local knowledge adjustment ──
   const now = new Date();
   const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
   const lk = localKnowledgeAdj(latest.dir, latest.spdKts, hourCST);
-  predSpd  = Math.max(0, predSpd  + lk.spdAdj);
-  predDir  = ((predDir + lk.dirAdj) % 360 + 360) % 360;
+  predSpd   = Math.max(0, predSpd   + lk.spdAdj);
+  predSpd30 = Math.max(0, predSpd30 + lk.spdAdj * 0.6); // smaller adj at 30-min
+  predDir   = ((predDir   + lk.dirAdj) % 360 + 360) % 360;
+  predDir30 = ((predDir30 + lk.dirAdj * 0.6) % 360 + 360) % 360;
 
-  // ── SIGNAL 8: Open-Meteo GFS model blend ──
+  // ── SIGNAL 8: HRRR model blend ──
   const model = getModelPlusSixty();
   let modelSignal = null;
   if (model) {
-    // Blend: 80% statistical ensemble + 20% model
-    // Model weighted lower because GFS is coarser than 2-min Crib obs,
-    // but carries information about approaching systems the Crib can't see.
     const modelWeight = 0.20;
     const statWeight  = 1 - modelWeight;
     const preSpdBlend = predSpd;
-    predSpd = predSpd * statWeight + model.spd * modelWeight;
-    // Direction blend using circular interpolation
-    const dirDiffModel = circDiff(predDir, model.dir);
-    predDir = ((predDir + dirDiffModel * modelWeight) % 360 + 360) % 360;
+    // 60-min blend: full 20% model weight
+    predSpd  = predSpd  * statWeight + model.spd  * modelWeight;
     predGust = predGust * statWeight + model.gust * modelWeight;
+    const dirDiffModel = circDiff(predDir, model.dir);
+    predDir  = ((predDir + dirDiffModel * modelWeight) % 360 + 360) % 360;
+    // 30-min blend: 10% model weight (Crib observations dominate at shorter range)
+    const modelWeight30 = 0.10;
+    predSpd30  = predSpd30  * (1 - modelWeight30) + model.spd  * modelWeight30;
+    predGust30 = predGust30 * (1 - modelWeight30) + model.gust * modelWeight30;
+    const dirDiffModel30 = circDiff(predDir30, model.dir);
+    predDir30  = ((predDir30 + dirDiffModel30 * modelWeight30) % 360 + 360) % 360;
     modelSignal = {
       spd: model.spd, dir: model.dir, gust: model.gust,
       spdContrib: (model.spd - preSpdBlend) * modelWeight,
@@ -2422,6 +2578,13 @@ function computePrediction(data) {
   conf = applySeasonalConfModifier(conf);
   conf = Math.min(95, Math.max(12, conf + getModelSpreadPenalty()));
 
+  // 30-min confidence: same base but add 10-15 points (shorter horizon = more reliable)
+  let conf30 = Math.min(95, conf + 12);
+  let confLevel30;
+  if (conf30 >= 75) confLevel30 = 'HIGH';
+  else if (conf30 >= 55) confLevel30 = 'MODERATE';
+  else confLevel30 = 'LOW';
+
   // ── CONFIDENCE LEVEL LABEL ──
   let confLevel, confColor;
   if (conf >= 75) { confLevel = 'HIGH';   confColor = '#39ff8c'; }
@@ -2430,9 +2593,12 @@ function computePrediction(data) {
   else               { confLevel = 'POOR'; confColor = '#ff3d5a'; }
 
   // ── DELTAS vs current ──
-  const spdDelta   = predSpd - latest.spdKts;
-  const dirDeltaDeg = circDiff(latest.dir, predDir);
-  const gustDelta  = predGust - latest.gstKts;
+  const spdDelta    = predSpd   - latest.spdKts;
+  const spdDelta30  = predSpd30 - latest.spdKts;
+  const dirDeltaDeg   = circDiff(latest.dir, predDir);
+  const dirDeltaDeg30 = circDiff(latest.dir, predDir30);
+  const gustDelta   = predGust   - latest.gstKts;
+  const gustDelta30 = predGust30 - latest.gstKts;
 
   // ── SIGNAL CARDS DATA ──
   const signals = [
@@ -2500,8 +2666,11 @@ function computePrediction(data) {
 
   return {
     predSpd, predDir, predGust,
+    predSpd30, predDir30, predGust30,
     spdDelta, dirDeltaDeg, gustDelta,
+    spdDelta30, dirDeltaDeg30, gustDelta30,
     conf, confLevel, confColor,
+    conf30, confLevel30,
     avgGustRatio, spdReg60, dirOscil,
     modelSignal, signals
   };
@@ -2517,9 +2686,35 @@ function renderPrediction(data) {
 
   // Timestamp
   const now = new Date();
-  const future = new Date(now.getTime() + 3600000);
+  const future30 = new Date(now.getTime() + 1800000);
+  const future60 = new Date(now.getTime() + 3600000);
   document.getElementById('predTimestamp').textContent =
-    `Now: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} → Pred: ${future.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+    `Now: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} → +30: ${future30.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} → +60: ${future60.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+
+  // ── 30-MINUTE CARDS ──
+  document.getElementById('pred30Spd').textContent = p.predSpd30.toFixed(1);
+  const s30sign = p.spdDelta30 >= 0 ? '+' : '';
+  document.getElementById('pred30SpdDelta').textContent = `${s30sign}${p.spdDelta30.toFixed(1)} kts vs now`;
+  document.getElementById('pred30SpdDelta').className = 'pred-30-delta ' +
+    (p.spdDelta30 > 1 ? 'delta-up' : p.spdDelta30 < -1 ? 'delta-down' : 'delta-same');
+
+  document.getElementById('pred30DirArrow').textContent = dirArrow(p.predDir30);
+  document.getElementById('pred30Dir').textContent = `${degToCompass(p.predDir30)} ${Math.round(p.predDir30)}°`;
+  const d30sign = p.dirDeltaDeg30 >= 0 ? '+' : '';
+  const vb30 = p.dirDeltaDeg30 > 3 ? 'Veering →' : p.dirDeltaDeg30 < -3 ? '← Backing' : 'Steady';
+  document.getElementById('pred30DirDelta').textContent = `${vb30} ${d30sign}${p.dirDeltaDeg30.toFixed(0)}°`;
+
+  document.getElementById('pred30Gust').textContent = p.predGust30.toFixed(1);
+  const g30sign = p.gustDelta30 >= 0 ? '+' : '';
+  document.getElementById('pred30GustDelta').textContent = `${g30sign}${p.gustDelta30.toFixed(1)} kts vs now`;
+
+  // Confidence improvement note
+  const confNote = document.getElementById('confImprovementNote');
+  if (confNote) {
+    const diff = p.conf30 - p.conf;
+    confNote.textContent = `+30 min confidence: ${p.conf30}% (${p.confLevel30}) — ${diff > 0 ? `+${diff}% more reliable than 60-min outlook` : 'similar to 60-min'}`;
+    confNote.style.color = p.conf30 >= 75 ? 'var(--accent3)' : p.conf30 >= 55 ? 'var(--accent)' : 'var(--warn)';
+  }
 
   // Speed card
   document.getElementById('predSpd').textContent = p.predSpd.toFixed(1);
