@@ -1559,14 +1559,15 @@
     <div class="marine-panel meteo">
       <div class="marine-header">
         <div>
-          <div class="marine-title">🌐 Open-Meteo GFS Model Forecast</div>
-          <div class="marine-issued">41.767°N 87.533°W · Crib coordinates · hourly</div>
+          <div class="marine-title">🌐 HRRR + GFS Model Forecast</div>
+          <div class="marine-issued">41.767°N 87.533°W · HRRR 3km primary · GFS 13km fallback · 15-min res</div>
         </div>
         <span class="marine-status status-load" id="meteoStatus">LOADING</span>
       </div>
       <div id="meteoPeriods">
         <div class="loading-shimmer" style="height:200px;border-radius:8px;"></div>
       </div>
+      <div id="modelSpreadBadge" style="display:none;margin-top:10px;padding:8px 12px;border-radius:6px;font-size:11px;line-height:1.6;"></div>
       <div class="meteo-blend-note" id="meteoBlendNote" style="display:none;"></div>
     </div>
 
@@ -1650,7 +1651,13 @@ function parseLine(line) {
 
 // Build the URL for today's data
 function getTodayUrl() {
-  return '/api/glerl';
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const start = new Date(Date.UTC(y, 0, 1));
+  const doy = Math.floor((now - start) / 86400000) + 1;
+  const mm = String(now.getUTCMonth()+1).padStart(2,'0');
+  const dd = String(now.getUTCDate()).padStart(2,'0');
+  return `https://www.glerl.noaa.gov/metdata/chi/${y}/${y}${mm}${dd}.04t.txt`;
 }
 
 async function fetchGLERL() {
@@ -1897,7 +1904,6 @@ function renderForecast(data) {
 
 function renderAnalysis(data) {
   if (data.length < 10) return;
-  const hourCST = ((new Date().getUTCHours() - 6 + 24) % 24);
   const recent = data.slice(-30); // last hour (30 × 2min)
   const first = recent[0];
   const last = recent[recent.length - 1];
@@ -2353,7 +2359,7 @@ function computePrediction(data) {
 
   // ── SIGNAL 6: Gust ratio model ──
   const avgGustRatio = gusts30.reduce((s, g, i) => s + g / Math.max(spds30[i], 0.5), 0) / gusts30.length;
-  let predGust = Math.max(predSpd, predSpd * avgGustRatio);
+  const predGust = Math.max(predSpd, predSpd * avgGustRatio);
 
   // ── SIGNAL 7: Local knowledge adjustment ──
   const now = new Date();
@@ -2419,6 +2425,7 @@ function computePrediction(data) {
 
   conf = Math.min(95, Math.max(12, Math.round(conf)));
   conf = applySeasonalConfModifier(conf);
+  conf = Math.min(95, Math.max(12, conf + getModelSpreadPenalty()));
 
   // ── CONFIDENCE LEVEL LABEL ──
   let confLevel, confColor;
@@ -2484,14 +2491,14 @@ function computePrediction(data) {
     },
     {
       icon: '🌐',
-      name: 'Open-Meteo GFS Model (+1h)',
+      name: 'HRRR 3km Model (+60min)',
       weight: modelSignal ? 'medium' : 'low',
       weightLabel: modelSignal ? 'MED WEIGHT (20%)' : 'NOT LOADED',
       desc: modelSignal
-        ? `GFS numerical weather model at Crib coordinates (41.767°N 87.533°W). Model resolution ~13 km. Weighted at 20% to add synoptic context (approaching fronts, pressure gradients) the Crib sensor cannot see. ${Math.abs(modelSignal.spdContrib) < 0.3 ? 'Model agrees with statistical ensemble.' : `Model pulling prediction ${modelSignal.spdContrib > 0 ? 'up' : 'down'} by ${Math.abs(modelSignal.spdContrib).toFixed(1)} kts.`}`
-        : 'Open-Meteo data not yet loaded — fetch in progress or failed. Statistical ensemble only.',
+        ? `HRRR (High-Resolution Rapid Refresh) at 3km resolution — updates every hour, assimilates radar every 15 min. Best available model for Lake Michigan coastal wind at this range. GFS 13km shown alongside for spread. ${Math.abs(modelSignal.spdContrib) < 0.3 ? 'HRRR agrees with statistical ensemble.' : `HRRR pulling prediction ${modelSignal.spdContrib > 0 ? 'up' : 'down'} by ${Math.abs(modelSignal.spdContrib).toFixed(1)} kts.`} ${getModelSpreadPenalty() < 0 ? '⚠ High HRRR/GFS spread detected — confidence reduced.' : ''}`
+        : 'HRRR/GFS data not yet loaded. Statistical ensemble only.',
       value: modelSignal
-        ? `→ Model reads: ${degToCompass(modelSignal.dir)} ${modelSignal.spd.toFixed(1)} kts · gust ${modelSignal.gust.toFixed(1)} kts`
+        ? `→ HRRR reads: ${degToCompass(modelSignal.dir)} ${modelSignal.spd.toFixed(1)} kts · gust ${modelSignal.gust.toFixed(1)} kts`
         : '→ Not available'
     }
   ];
@@ -2699,95 +2706,250 @@ function renderNWSForecast(rawData) {
 }
 
 // ═══════════════════════════════════════════════════
-//  OPEN-METEO GFS MODEL FORECAST
-//  api.open-meteo.com · No key · CORS OK
+//  HRRR + GFS DUAL MODEL FORECAST
+//  HRRR: 3km, hourly updates, 48h, North America only
+//  GFS:  13km, 6-hourly updates, fallback + 48h+
+//  Both via api.open-meteo.com · No key · CORS OK
 // ═══════════════════════════════════════════════════
 
-const OPEN_METEO_URL =
-  'https://api.open-meteo.com/v1/forecast' +
+// HRRR via dedicated /v1/gfs endpoint — 15-min resolution, 48h
+const HRRR_URL =
+  'https://api.open-meteo.com/v1/gfs' +
+  '?latitude=41.767&longitude=-87.533' +
+  '&minutely_15=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
+  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
+  '&models=ncep_hrrr_conus';
+
+// GFS fallback — hourly, 48h (also used for spread calculation)
+const GFS_URL =
+  'https://api.open-meteo.com/v1/gfs' +
   '?latitude=41.767&longitude=-87.533' +
   '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
-  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago';
+  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
+  '&models=ncep_gfs013';
+
+let gfsForecastData = null; // raw GFS hourly for spread calc
 
 async function fetchOpenMeteo() {
-  const res = await fetch(OPEN_METEO_URL);
-  if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
-  return await res.json();
+  // Fetch HRRR and GFS in parallel
+  const [hrrrRes, gfsRes] = await Promise.allSettled([
+    fetch(HRRR_URL).then(r => { if (!r.ok) throw new Error(`HRRR HTTP ${r.status}`); return r.json(); }),
+    fetch(GFS_URL).then(r  => { if (!r.ok) throw new Error(`GFS HTTP ${r.status}`);  return r.json(); })
+  ]);
+
+  const hrrrOk = hrrrRes.status === 'fulfilled';
+  const gfsOk  = gfsRes.status  === 'fulfilled';
+
+  if (!hrrrOk && !gfsOk) throw new Error('Both HRRR and GFS failed');
+
+  return {
+    hrrr: hrrrOk ? hrrrRes.value : null,
+    gfs:  gfsOk  ? gfsRes.value  : null,
+    hrrrFailed: !hrrrOk,
+    gfsFailed:  !gfsOk
+  };
 }
 
-function parseOpenMeteo(data) {
+function parseHRRR(data) {
+  // HRRR returns minutely_15 — 15-min intervals
+  if (!data || !data.minutely_15) return [];
+  const times  = data.minutely_15.time;
+  const speeds = data.minutely_15.wind_speed_10m;
+  const dirs   = data.minutely_15.wind_direction_10m;
+  const gusts  = data.minutely_15.wind_gusts_10m;
+
+  const now = new Date();
+  // Round down to nearest 15 min
+  const nowMin  = Math.floor(now.getMinutes() / 15) * 15;
+  const nowSlot = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), nowMin);
+
+  const rows = [];
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= nowSlot) {
+      rows.push({
+        time:  t,
+        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        spd:   Math.round(speeds[i] * 10) / 10,
+        dir:   dirs[i],
+        gust:  Math.round(gusts[i] * 10) / 10,
+        isNow: t.getTime() === nowSlot.getTime(),
+        model: 'HRRR'
+      });
+    }
+    if (rows.length >= 13) break; // now + 12 × 15min = 3 hours
+  }
+  return rows;
+}
+
+function parseGFS(data) {
+  // GFS returns hourly
+  if (!data || !data.hourly) return [];
   const times  = data.hourly.time;
   const speeds = data.hourly.wind_speed_10m;
   const dirs   = data.hourly.wind_direction_10m;
   const gusts  = data.hourly.wind_gusts_10m;
+
   const now = new Date();
   const nowHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
-  const hours = [];
+  const rows = [];
   for (let i = 0; i < times.length; i++) {
     const t = new Date(times[i]);
     if (t >= nowHour) {
-      hours.push({
-        time: t,
+      rows.push({
+        time:  t,
         label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        spd:  Math.round(speeds[i] * 10) / 10,
-        dir:  dirs[i],
-        gust: Math.round(gusts[i] * 10) / 10,
-        isNow: t.getTime() === nowHour.getTime()
+        spd:   Math.round(speeds[i] * 10) / 10,
+        dir:   dirs[i],
+        gust:  Math.round(gusts[i] * 10) / 10,
+        isNow: t.getTime() === nowHour.getTime(),
+        model: 'GFS'
       });
     }
-    if (hours.length >= 13) break;
+    if (rows.length >= 13) break;
   }
-  return hours;
+  return rows;
+}
+
+/**
+ * Compute model spread between HRRR and GFS at +1h.
+ * Returns { spdSpread, dirSpread, highSpread } or null.
+ */
+function computeModelSpread(hrrrRows, gfsRows) {
+  // Find +60min slot in each
+  const hrrrPlus1 = hrrrRows.find((r, i) => i === 4); // 4 × 15min = +60min
+  const gfsPlus1  = gfsRows.find((r, i)  => i === 1); // 1 × 60min = +60min
+  if (!hrrrPlus1 || !gfsPlus1) return null;
+
+  const spdSpread = Math.abs(hrrrPlus1.spd - gfsPlus1.spd);
+  const dirSpread = Math.abs(circDiff(hrrrPlus1.dir, gfsPlus1.dir));
+  const highSpread = spdSpread > 4 || dirSpread > 25;
+
+  return { spdSpread, dirSpread, highSpread, hrrrPlus1, gfsPlus1 };
 }
 
 function renderOpenMeteo(data) {
-  const hours = parseOpenMeteo(data);
-  modelForecastData = hours;
-  document.getElementById('meteoStatus').textContent = 'LIVE';
-  document.getElementById('meteoStatus').className = 'marine-status status-live';
-  if (!hours.length) {
-    document.getElementById('meteoPeriods').innerHTML = `<div style="color:var(--muted);font-size:12px;">No forecast data.</div>`;
+  const hrrrRows = data.hrrr ? parseHRRR(data.hrrr) : [];
+  const gfsRows  = data.gfs  ? parseGFS(data.gfs)   : [];
+
+  // Use HRRR as primary display, fall back to GFS if HRRR failed
+  const displayRows = hrrrRows.length ? hrrrRows : gfsRows;
+  const primaryModel = hrrrRows.length ? 'HRRR 3km' : 'GFS 13km';
+  const primaryColor = hrrrRows.length ? 'var(--accent3)' : 'var(--warn)';
+
+  modelForecastData = displayRows;
+  if (data.gfs) gfsForecastData = gfsRows;
+
+  document.getElementById('meteoStatus').textContent = data.hrrrFailed ? 'GFS ONLY' : 'HRRR LIVE';
+  document.getElementById('meteoStatus').className   = 'marine-status ' + (data.hrrrFailed ? 'status-error' : 'status-live');
+
+  if (!displayRows.length) {
+    document.getElementById('meteoPeriods').innerHTML = `<div style="color:var(--muted);font-size:12px;">No forecast data available.</div>`;
     return;
   }
-  const maxSpd = Math.max(...hours.map(h => h.spd), 1);
+
+  const maxSpd = Math.max(...displayRows.map(h => h.spd), 1);
+  const resolution = hrrrRows.length ? '15-min' : '60-min';
+
+  // Build GFS comparison column values indexed by closest time
+  const gfsMap = {};
+  gfsRows.forEach(g => { gfsMap[g.time.getHours()] = g; });
+
   document.getElementById('meteoPeriods').innerHTML = `
+    <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
+      Primary: <span style="color:${primaryColor}">${primaryModel}</span> · ${resolution} resolution
+      ${gfsRows.length && hrrrRows.length ? '· <span style="color:var(--muted2)">GFS 13km shown for spread</span>' : ''}
+    </div>
     <table class="meteo-table">
-      <thead><tr><th>Time CST</th><th>Dir</th><th>Speed (kts)</th><th>Gust</th><th>Δ</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Dir</th>
+          <th>Speed (kts)</th>
+          <th>Gust</th>
+          <th>Δ</th>
+          ${hrrrRows.length && gfsRows.length ? '<th style="color:var(--muted2)">GFS</th>' : ''}
+        </tr>
+      </thead>
       <tbody>
-        ${hours.map((h, i) => {
-          const prev = hours[i - 1];
-          const diff = prev ? h.spd - prev.spd : 0;
-          const cls  = diff > 1 ? 'model-delta-up' : diff < -1 ? 'model-delta-down' : 'model-delta-same';
-          const sym  = diff > 1 ? `↑${diff.toFixed(1)}` : diff < -1 ? `↓${Math.abs(diff).toFixed(1)}` : '→';
-          const barW = Math.round(h.spd / maxSpd * 100);
+        ${displayRows.map((h, i) => {
+          const prev    = displayRows[i - 1];
+          const diff    = prev ? h.spd - prev.spd : 0;
+          const cls     = diff > 1 ? 'model-delta-up' : diff < -1 ? 'model-delta-down' : 'model-delta-same';
+          const sym     = diff > 1 ? `↑${diff.toFixed(1)}` : diff < -1 ? `↓${Math.abs(diff).toFixed(1)}` : '→';
+          const barW    = Math.round(h.spd / maxSpd * 100);
+          const gfsHr   = gfsMap[h.time.getHours()];
+          const spread  = gfsHr ? Math.abs(h.spd - gfsHr.spd) : null;
+          const spreadCls = spread === null ? '' : spread > 4 ? 'model-delta-up' : spread > 2 ? '' : 'model-delta-same';
           return `<tr class="${h.isNow ? 'now-row' : ''}">
             <td>${h.isNow ? '▶ ' : ''}${h.label}</td>
             <td><span style="font-family:'Syne',sans-serif;font-weight:700;">${dirArrow(h.dir)} ${degToCompass(h.dir)}</span></td>
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
-                <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent3);min-width:32px;">${h.spd}</span>
+                <span style="font-family:'Syne',sans-serif;font-weight:700;color:${primaryColor};min-width:32px;">${h.spd}</span>
                 <div style="flex:1;height:4px;background:var(--border);border-radius:2px;">
-                  <div style="width:${barW}%;height:100%;background:var(--accent3);border-radius:2px;"></div>
+                  <div style="width:${barW}%;height:100%;background:${primaryColor};border-radius:2px;"></div>
                 </div>
               </div>
             </td>
             <td style="color:var(--warn);">${h.gust}</td>
             <td class="${cls}">${i === 0 ? '—' : sym}</td>
+            ${hrrrRows.length && gfsRows.length
+              ? `<td style="color:var(--muted2);font-size:10px;" class="${spreadCls}">
+                  ${gfsHr ? `${dirArrow(gfsHr.dir)} ${gfsHr.spd}` : '—'}
+                </td>`
+              : ''}
           </tr>`;
         }).join('')}
       </tbody>
     </table>`;
-  const plusOne = hours[1];
+
+  // Model spread badge
+  const spread = (hrrrRows.length && gfsRows.length) ? computeModelSpread(hrrrRows, gfsRows) : null;
+  const spreadEl = document.getElementById('modelSpreadBadge');
+  if (spread) {
+    spreadEl.style.display = 'block';
+    if (spread.highSpread) {
+      spreadEl.style.background = 'rgba(255,184,48,0.08)';
+      spreadEl.style.border = '1px solid rgba(255,184,48,0.25)';
+      spreadEl.style.color = 'var(--warn)';
+      spreadEl.innerHTML = `⚠ <strong>High model spread at +1h:</strong> HRRR ${spread.hrrrPlus1.spd} kts ${degToCompass(spread.hrrrPlus1.dir)} vs GFS ${spread.gfsPlus1.spd} kts ${degToCompass(spread.gfsPlus1.dir)} · Δspd=${spread.spdSpread.toFixed(1)} kts · Δdir=${spread.dirSpread.toFixed(0)}° — prediction confidence reduced.`;
+    } else {
+      spreadEl.style.background = 'rgba(57,255,140,0.05)';
+      spreadEl.style.border = '1px solid rgba(57,255,140,0.15)';
+      spreadEl.style.color = 'var(--accent3)';
+      spreadEl.innerHTML = `✓ <strong>Models agree at +1h:</strong> HRRR ${spread.hrrrPlus1.spd} kts vs GFS ${spread.gfsPlus1.spd} kts · Δspd=${spread.spdSpread.toFixed(1)} kts · Δdir=${spread.dirSpread.toFixed(0)}° — higher confidence.`;
+    }
+  }
+
+  // Blend note
+  const plusOne = displayRows.find((r, i) => i === (hrrrRows.length ? 4 : 1)); // +60min
   if (plusOne) {
     const note = document.getElementById('meteoBlendNote');
     note.style.display = 'block';
-    note.innerHTML = `<strong style="color:var(--accent3)">Model signal at +1h:</strong> ${degToCompass(plusOne.dir)} ${plusOne.spd} kts · gust ${plusOne.gust} kts — blended into ensemble at 20% weight. GFS resolution ~13 km; accuracy lower during lake breeze transitions.`;
+    note.innerHTML = `<strong style="color:${primaryColor}">Model signal at +60min (${primaryModel}):</strong> ${degToCompass(plusOne.dir)} ${plusOne.spd} kts · gust ${plusOne.gust} kts — blended into ensemble at 20% weight. ${spread && spread.highSpread ? '<strong style="color:var(--warn)">High spread detected — ensemble confidence reduced 10%.</strong>' : 'Models agree — normal confidence.'}`;
   }
 }
 
 function getModelPlusSixty() {
-  if (!modelForecastData || modelForecastData.length < 2) return null;
-  return modelForecastData[1] || null;
+  if (!modelForecastData || !modelForecastData.length) return null;
+  // HRRR: index 4 = +60min (4 × 15min); GFS: index 1 = +60min (1 × 60min)
+  const isHRRR = modelForecastData[0] && modelForecastData[0].model === 'HRRR';
+  return modelForecastData[isHRRR ? 4 : 1] || modelForecastData[modelForecastData.length - 1];
+}
+
+/**
+ * Returns model spread penalty for confidence (0 to -10).
+ */
+function getModelSpreadPenalty() {
+  if (!modelForecastData || !gfsForecastData) return 0;
+  const isHRRR = modelForecastData[0] && modelForecastData[0].model === 'HRRR';
+  const spread = computeModelSpread(
+    isHRRR ? modelForecastData : [],
+    gfsForecastData
+  );
+  if (!spread) return 0;
+  return spread.highSpread ? -10 : 0;
 }
 
 // ═══════════════════════════════════════════════════
