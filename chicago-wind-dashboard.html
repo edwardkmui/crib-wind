@@ -1431,6 +1431,8 @@
 // ═══════════════════════════════════════════════════
 
 let chartInstance = null;
+let archivePatterns = null;
+let archiveSeasonal = null;
 let chartMode = 'speed';
 let parsedData = [];
 let lastDir = null;
@@ -1834,6 +1836,20 @@ function renderAnalysis(data) {
 async function loadData() {
   setLiveStatus('loading');
   try {
+    if (!archivePatterns) {
+      try {
+        const [pRes, sRes] = await Promise.all([
+          fetch('https://edwardkmui.github.io/crib-wind/crib_patterns.json'),
+          fetch('https://edwardkmui.github.io/crib-wind/crib_seasonal.json')
+        ]);
+        archivePatterns = await pRes.json();
+        archiveSeasonal = await sRes.json();
+        document.getElementById('chip-archive').classList.add('active');
+        console.log('Archive loaded:', Object.keys(archivePatterns).length, 'buckets');
+      } catch(e) {
+        console.warn('Archive fetch failed:', e);
+      }
+    }
     const data = await fetchGLERL();
     parsedData = data;
     if (!data.length) throw new Error('No data rows');
