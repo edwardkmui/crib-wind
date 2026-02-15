@@ -1082,6 +1082,145 @@
   }
 
   .disclaimer-bar strong { color: var(--warn); }
+
+  /* ── MARINE FORECAST PANELS ── */
+  .marine-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .marine-grid { grid-template-columns: 1fr; } }
+
+  .marine-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    animation: fadeSlideIn 0.5s ease both;
+    animation-delay: 0.25s;
+  }
+
+  .marine-panel.nws  { border-color: rgba(255,184,48,0.25); }
+  .marine-panel.meteo { border-color: rgba(57,255,140,0.2); }
+
+  .marine-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .marine-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .marine-panel.nws  .marine-title { color: var(--warn); }
+  .marine-panel.meteo .marine-title { color: var(--accent3); }
+
+  .marine-issued {
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.06em;
+    margin-top: 3px;
+  }
+
+  .marine-status {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .status-live  { background: rgba(57,255,140,0.1); color: var(--accent3); border: 1px solid rgba(57,255,140,0.25); }
+  .status-error { background: rgba(255,61,90,0.1);  color: var(--danger);  border: 1px solid rgba(255,61,90,0.25); }
+  .status-load  { background: rgba(90,122,154,0.1); color: var(--muted);   border: 1px solid rgba(90,122,154,0.2); }
+
+  /* NWS text forecast periods */
+  .nws-period {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(30,48,80,0.5);
+  }
+  .nws-period:last-child { border-bottom: none; }
+
+  .nws-period-name {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-bottom: 4px;
+  }
+
+  .nws-period-text {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .nws-highlight {
+    display: inline-block;
+    background: rgba(255,184,48,0.1);
+    border-radius: 3px;
+    padding: 0 5px;
+    color: var(--warn);
+    font-weight: 500;
+  }
+
+  .nws-shift-alert {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(255,61,90,0.08);
+    border: 1px solid rgba(255,61,90,0.2);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--danger);
+  }
+
+  /* Open-Meteo hourly table */
+  .meteo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .meteo-table th {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 4px 8px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .meteo-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(30,48,80,0.35);
+    color: var(--text);
+  }
+  .meteo-table tr:last-child td { border-bottom: none; }
+  .meteo-table tr.now-row td { background: rgba(57,255,140,0.05); }
+  .meteo-table tr.now-row td:first-child {
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  .meteo-blend-note {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(57,255,140,0.05);
+    border: 1px solid rgba(57,255,140,0.15);
+    border-radius: 6px;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .model-delta-up   { color: var(--danger); }
+  .model-delta-down { color: var(--accent3); }
+  .model-delta-same { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -1385,13 +1524,52 @@
 
       <div class="disclaimer-bar">
         <strong>⚠ Prediction Methodology:</strong>
-        Statistical short-range forecast using GLERL NOAA Crib 2-min data only.
-        Speed &amp; direction predicted via linear regression on 60 observations, EWMA trend signal, and acceleration term.
+        Ensemble of 7 signals: linear regression (60-obs), EWMA trend, acceleration, circular direction regression, gust ratio, Chicago local knowledge, and Open-Meteo GFS model (+1h, 20% weight).
+        NWS NSH marine forecast (LMZ740–742) displayed separately for human-forecast context.
         Confidence degrades with high gust variability, direction oscillation, and light air.
-        For authoritative forecasts: <strong style="color:var(--accent)">NWS LMK marine zone LMZ046</strong> and
-        <strong style="color:var(--accent)">Open-Meteo marine API</strong>. Archive pattern matching (2000–2025) requires backend.
+        Seasonal modifier applied based on month. For authoritative safety forecasts always check
+        <strong style="color:var(--accent)">NWS Chicago marine</strong> directly.
       </div>
     </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- MARINE FORECAST PANELS                         -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="marine-grid">
+
+    <!-- NWS NEARSHORE FORECAST -->
+    <div class="marine-panel nws">
+      <div class="marine-header">
+        <div>
+          <div class="marine-title">📡 NWS Nearshore Marine Forecast</div>
+          <div class="marine-issued" id="nwsIssued">LMZ740–742 · Wilmette to Calumet · within 5 nm</div>
+        </div>
+        <span class="marine-status status-load" id="nwsStatus">LOADING</span>
+      </div>
+      <div id="nwsPeriods">
+        <div class="loading-shimmer" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+        <div class="loading-shimmer" style="height:48px;border-radius:8px;margin-bottom:8px;"></div>
+        <div class="loading-shimmer" style="height:48px;border-radius:8px;"></div>
+      </div>
+      <div id="nwsShiftAlert" style="display:none;" class="nws-shift-alert"></div>
+    </div>
+
+    <!-- OPEN-METEO MODEL FORECAST -->
+    <div class="marine-panel meteo">
+      <div class="marine-header">
+        <div>
+          <div class="marine-title">🌐 Open-Meteo GFS Model Forecast</div>
+          <div class="marine-issued">41.767°N 87.533°W · Crib coordinates · hourly</div>
+        </div>
+        <span class="marine-status status-load" id="meteoStatus">LOADING</span>
+      </div>
+      <div id="meteoPeriods">
+        <div class="loading-shimmer" style="height:200px;border-radius:8px;"></div>
+      </div>
+      <div class="meteo-blend-note" id="meteoBlendNote" style="display:none;"></div>
+    </div>
+
   </div>
 
   <!-- MOBILE / iOS NOTICE -->
@@ -1431,8 +1609,6 @@
 // ═══════════════════════════════════════════════════
 
 let chartInstance = null;
-let archivePatterns = null;
-let archiveSeasonal = null;
 let chartMode = 'speed';
 let parsedData = [];
 let lastDir = null;
@@ -1836,20 +2012,6 @@ function renderAnalysis(data) {
 async function loadData() {
   setLiveStatus('loading');
   try {
-    if (!archivePatterns) {
-      try {
-        const [pRes, sRes] = await Promise.all([
-          fetch('https://edwardkmui.github.io/crib-wind/crib_patterns.json'),
-          fetch('https://edwardkmui.github.io/crib-wind/crib_seasonal.json')
-        ]);
-        archivePatterns = await pRes.json();
-        archiveSeasonal = await sRes.json();
-        document.getElementById('chip-archive').classList.add('active');
-        console.log('Archive loaded:', Object.keys(archivePatterns).length, 'buckets');
-      } catch(e) {
-        console.warn('Archive fetch failed:', e);
-      }
-    }
     const data = await fetchGLERL();
     parsedData = data;
     if (!data.length) throw new Error('No data rows');
@@ -1862,6 +2024,31 @@ async function loadData() {
     renderAnalysis(data);
     renderPrediction(data);
     renderSeasonalPanel();
+
+    // Fetch marine forecasts in parallel — non-blocking, update when ready
+    fetchNWSForecast()
+      .then(renderNWSForecast)
+      .catch(e => {
+        console.warn('NWS fetch failed:', e);
+        document.getElementById('nwsStatus').textContent = 'UNAVAILABLE';
+        document.getElementById('nwsStatus').className = 'marine-status status-error';
+        document.getElementById('nwsPeriods').innerHTML =
+          `<div style="color:var(--muted);font-size:12px;">NWS API unavailable. Check <a href="https://forecast.weather.gov/product.php?site=lot&product=nsh&issuedby=lot" target="_blank" style="color:var(--accent)">weather.gov/lot/marine</a> directly.</div>`;
+      });
+
+    fetchOpenMeteo()
+      .then(raw => {
+        renderOpenMeteo(raw);
+        // Re-run prediction with model data now available
+        renderPrediction(data);
+      })
+      .catch(e => {
+        console.warn('Open-Meteo fetch failed:', e);
+        document.getElementById('meteoStatus').textContent = 'UNAVAILABLE';
+        document.getElementById('meteoStatus').className = 'marine-status status-error';
+        document.getElementById('meteoPeriods').innerHTML =
+          `<div style="color:var(--muted);font-size:12px;">Open-Meteo API unavailable. Prediction running on Crib data only.</div>`;
+      });
 
     const now = new Date();
     document.getElementById('updateTime').textContent =
@@ -2180,6 +2367,28 @@ function computePrediction(data) {
   predSpd  = Math.max(0, predSpd  + lk.spdAdj);
   predDir  = ((predDir + lk.dirAdj) % 360 + 360) % 360;
 
+  // ── SIGNAL 8: Open-Meteo GFS model blend ──
+  const model = getModelPlusSixty();
+  let modelSignal = null;
+  if (model) {
+    // Blend: 80% statistical ensemble + 20% model
+    // Model weighted lower because GFS is coarser than 2-min Crib obs,
+    // but carries information about approaching systems the Crib can't see.
+    const modelWeight = 0.20;
+    const statWeight  = 1 - modelWeight;
+    const preSpdBlend = predSpd;
+    predSpd = predSpd * statWeight + model.spd * modelWeight;
+    // Direction blend using circular interpolation
+    const dirDiffModel = circDiff(predDir, model.dir);
+    predDir = ((predDir + dirDiffModel * modelWeight) % 360 + 360) % 360;
+    predGust = predGust * statWeight + model.gust * modelWeight;
+    modelSignal = {
+      spd: model.spd, dir: model.dir, gust: model.gust,
+      spdContrib: (model.spd - preSpdBlend) * modelWeight,
+      dirContrib: dirDiffModel * modelWeight
+    };
+  }
+
   // ── CONFIDENCE SCORING ──
   // Multiple penalty/bonus factors:
   let conf = 85; // start optimistic
@@ -2277,6 +2486,18 @@ function computePrediction(data) {
       weightLabel: (lk.spdAdj !== 0 || lk.dirAdj !== 0) ? 'MED WEIGHT' : 'LOW WEIGHT',
       desc: lk.note,
       value: `→ Adj: ${lk.spdAdj >= 0 ? '+' : ''}${lk.spdAdj.toFixed(1)} kts, ${lk.dirAdj >= 0 ? '+' : ''}${lk.dirAdj.toFixed(0)}° dir`
+    },
+    {
+      icon: '🌐',
+      name: 'Open-Meteo GFS Model (+1h)',
+      weight: modelSignal ? 'medium' : 'low',
+      weightLabel: modelSignal ? 'MED WEIGHT (20%)' : 'NOT LOADED',
+      desc: modelSignal
+        ? `GFS numerical weather model at Crib coordinates (41.767°N 87.533°W). Model resolution ~13 km. Weighted at 20% to add synoptic context (approaching fronts, pressure gradients) the Crib sensor cannot see. ${Math.abs(modelSignal.spdContrib) < 0.3 ? 'Model agrees with statistical ensemble.' : `Model pulling prediction ${modelSignal.spdContrib > 0 ? 'up' : 'down'} by ${Math.abs(modelSignal.spdContrib).toFixed(1)} kts.`}`
+        : 'Open-Meteo data not yet loaded — fetch in progress or failed. Statistical ensemble only.',
+      value: modelSignal
+        ? `→ Model reads: ${degToCompass(modelSignal.dir)} ${modelSignal.spd.toFixed(1)} kts · gust ${modelSignal.gust.toFixed(1)} kts`
+        : '→ Not available'
     }
   ];
 
@@ -2285,7 +2506,7 @@ function computePrediction(data) {
     spdDelta, dirDeltaDeg, gustDelta,
     conf, confLevel, confColor,
     avgGustRatio, spdReg60, dirOscil,
-    signals
+    modelSignal, signals
   };
 }
 
@@ -2380,6 +2601,198 @@ function renderDemoPrediction() {
     demoFull.push({ ...t, airF:'46.0', rh:71, timeLabel:`${String(9+Math.floor(i/30)).padStart(2,'0')}:${String((i*2)%60).padStart(2,'0')}` });
   });
   renderPrediction(demoFull);
+}
+
+// ═══════════════════════════════════════════════════
+//  NWS NEARSHORE MARINE FORECAST (LMZ740–742)
+//  API: api.weather.gov · No key required · CORS OK
+// ═══════════════════════════════════════════════════
+
+let nwsForecastData = null;
+let modelForecastData = null;
+
+async function fetchNWSForecast() {
+  const listRes = await fetch('https://api.weather.gov/products/types/NSH/locations/LOT', {
+    headers: { 'User-Agent': 'CribWindDashboard/1.0 (chicago-sailing-weather)' }
+  });
+  if (!listRes.ok) throw new Error(`NWS list HTTP ${listRes.status}`);
+  const listData = await listRes.json();
+  const products = listData['@graph'];
+  if (!products || !products.length) throw new Error('No NSH products');
+  const latestId = products[0].id;
+  const prodRes = await fetch(`https://api.weather.gov/products/${latestId}`, {
+    headers: { 'User-Agent': 'CribWindDashboard/1.0 (chicago-sailing-weather)' }
+  });
+  if (!prodRes.ok) throw new Error(`NWS product HTTP ${prodRes.status}`);
+  const prodData = await prodRes.json();
+  return { text: prodData.productText, issuanceTime: prodData.issuanceTime };
+}
+
+function normalizeDir(raw) {
+  if (!raw) return null;
+  const map = {
+    'north':'N','south':'S','east':'E','west':'W',
+    'northwest':'NW','northeast':'NE','southwest':'SW','southeast':'SE',
+    'north northwest':'NNW','north northeast':'NNE',
+    'south southwest':'SSW','south southeast':'SSE',
+    'west northwest':'WNW','west southwest':'WSW',
+    'east northeast':'ENE','east southeast':'ESE',
+  };
+  return map[raw.toLowerCase().trim()] || raw.toUpperCase().trim();
+}
+
+function parseNWSText(rawText) {
+  const periodRe = /\.(REST OF TODAY|TODAY|TONIGHT|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|MONDAY NIGHT|TUESDAY NIGHT|WEDNESDAY NIGHT|THURSDAY NIGHT|FRIDAY NIGHT|SATURDAY NIGHT|SUNDAY NIGHT)\.\.\./gi;
+  const parts = rawText.split(periodRe);
+  const periods = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    const name = parts[i].trim();
+    const body = (parts[i + 1] || '').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!body) continue;
+    const windMatch = body.match(
+      /([NSEW]+(?:\s[NSEW]+)?|North|South|East|West|Northwest|Northeast|Southwest|Southeast)\s+winds?\s+(?:around\s+)?(\d+)(?:\s+to\s+(\d+))?\s+kt/i
+    );
+    const becomingMatch = body.match(
+      /becoming\s+([NSEW]+(?:\s[NSEW]+)?|North|South|East|West|Northwest|Northeast|Southwest|Southeast)/i
+    );
+    const windDir   = windMatch ? normalizeDir(windMatch[1]) : null;
+    const windSpd   = windMatch ? parseInt(windMatch[2]) : null;
+    const windSpdHi = windMatch ? (windMatch[3] ? parseInt(windMatch[3]) : windSpd) : null;
+    const shiftDir  = becomingMatch ? normalizeDir(becomingMatch[1]) : null;
+    const hasShift  = !!shiftDir && shiftDir !== windDir;
+    const hasAdvisory = /ADVISORY|WARNING|WATCH/i.test(body);
+    periods.push({ name, text: body, windDir, windSpd, windSpdHi, shiftDir, hasShift, hasAdvisory });
+    if (periods.length >= 5) break;
+  }
+  return periods;
+}
+
+function renderNWSForecast(rawData) {
+  const periods = parseNWSText(rawData.text);
+  nwsForecastData = periods;
+  const issued = new Date(rawData.issuanceTime);
+  document.getElementById('nwsIssued').textContent =
+    `LMZ740–742 · Issued ${issued.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST · ${issued.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}`;
+  document.getElementById('nwsStatus').textContent = 'LIVE';
+  document.getElementById('nwsStatus').className = 'marine-status status-live';
+  if (!periods.length) {
+    document.getElementById('nwsPeriods').innerHTML = `<div style="color:var(--muted);font-size:12px;">Could not parse forecast. Check <a href="https://forecast.weather.gov/product.php?site=lot&product=nsh&issuedby=lot" target="_blank" style="color:var(--accent)">weather.gov/lot/marine</a> directly.</div>`;
+    return;
+  }
+  const alertPeriod = periods.find(p => p.hasShift);
+  const alertEl = document.getElementById('nwsShiftAlert');
+  if (alertPeriod) {
+    alertEl.style.display = 'block';
+    alertEl.innerHTML = `⚠ Wind shift forecast: <strong>${alertPeriod.windDir || '?'} → ${alertPeriod.shiftDir}</strong> during ${alertPeriod.name}`;
+  }
+  function highlightText(text) {
+    return text
+      .replace(/(\d+)\s+to\s+(\d+)\s+kt/gi, '<span class="nws-highlight">$1–$2 kt</span>')
+      .replace(/around\s+(\d+)\s+kt/gi, '<span class="nws-highlight">~$1 kt</span>')
+      .replace(/\b(NW|NE|SW|SE|SSW|SSE|NNW|NNE|WNW|WSW|ENE|ESE|North|South|East|West|Northwest|Northeast|Southwest|Southeast)\b/g,
+        '<span class="nws-highlight">$1</span>')
+      .replace(/\b(SMALL CRAFT ADVISORY|GALE WARNING|STORM WARNING)\b/gi,
+        '<strong style="color:var(--danger)">$1</strong>');
+  }
+  document.getElementById('nwsPeriods').innerHTML = periods.map(p => `
+    <div class="nws-period">
+      <div class="nws-period-name">${p.name}${p.hasAdvisory ? ' <strong style="color:var(--danger)">⚠</strong>' : ''}</div>
+      <div class="nws-period-text">${highlightText(p.text)}</div>
+    </div>
+  `).join('');
+  document.getElementById('chip-nws').classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+//  OPEN-METEO GFS MODEL FORECAST
+//  api.open-meteo.com · No key · CORS OK
+// ═══════════════════════════════════════════════════
+
+const OPEN_METEO_URL =
+  'https://api.open-meteo.com/v1/forecast' +
+  '?latitude=41.767&longitude=-87.533' +
+  '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
+  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago';
+
+async function fetchOpenMeteo() {
+  const res = await fetch(OPEN_METEO_URL);
+  if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
+  return await res.json();
+}
+
+function parseOpenMeteo(data) {
+  const times  = data.hourly.time;
+  const speeds = data.hourly.wind_speed_10m;
+  const dirs   = data.hourly.wind_direction_10m;
+  const gusts  = data.hourly.wind_gusts_10m;
+  const now = new Date();
+  const nowHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+  const hours = [];
+  for (let i = 0; i < times.length; i++) {
+    const t = new Date(times[i]);
+    if (t >= nowHour) {
+      hours.push({
+        time: t,
+        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        spd:  Math.round(speeds[i] * 10) / 10,
+        dir:  dirs[i],
+        gust: Math.round(gusts[i] * 10) / 10,
+        isNow: t.getTime() === nowHour.getTime()
+      });
+    }
+    if (hours.length >= 13) break;
+  }
+  return hours;
+}
+
+function renderOpenMeteo(data) {
+  const hours = parseOpenMeteo(data);
+  modelForecastData = hours;
+  document.getElementById('meteoStatus').textContent = 'LIVE';
+  document.getElementById('meteoStatus').className = 'marine-status status-live';
+  if (!hours.length) {
+    document.getElementById('meteoPeriods').innerHTML = `<div style="color:var(--muted);font-size:12px;">No forecast data.</div>`;
+    return;
+  }
+  const maxSpd = Math.max(...hours.map(h => h.spd), 1);
+  document.getElementById('meteoPeriods').innerHTML = `
+    <table class="meteo-table">
+      <thead><tr><th>Time CST</th><th>Dir</th><th>Speed (kts)</th><th>Gust</th><th>Δ</th></tr></thead>
+      <tbody>
+        ${hours.map((h, i) => {
+          const prev = hours[i - 1];
+          const diff = prev ? h.spd - prev.spd : 0;
+          const cls  = diff > 1 ? 'model-delta-up' : diff < -1 ? 'model-delta-down' : 'model-delta-same';
+          const sym  = diff > 1 ? `↑${diff.toFixed(1)}` : diff < -1 ? `↓${Math.abs(diff).toFixed(1)}` : '→';
+          const barW = Math.round(h.spd / maxSpd * 100);
+          return `<tr class="${h.isNow ? 'now-row' : ''}">
+            <td>${h.isNow ? '▶ ' : ''}${h.label}</td>
+            <td><span style="font-family:'Syne',sans-serif;font-weight:700;">${dirArrow(h.dir)} ${degToCompass(h.dir)}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent3);min-width:32px;">${h.spd}</span>
+                <div style="flex:1;height:4px;background:var(--border);border-radius:2px;">
+                  <div style="width:${barW}%;height:100%;background:var(--accent3);border-radius:2px;"></div>
+                </div>
+              </div>
+            </td>
+            <td style="color:var(--warn);">${h.gust}</td>
+            <td class="${cls}">${i === 0 ? '—' : sym}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+  const plusOne = hours[1];
+  if (plusOne) {
+    const note = document.getElementById('meteoBlendNote');
+    note.style.display = 'block';
+    note.innerHTML = `<strong style="color:var(--accent3)">Model signal at +1h:</strong> ${degToCompass(plusOne.dir)} ${plusOne.spd} kts · gust ${plusOne.gust} kts — blended into ensemble at 20% weight. GFS resolution ~13 km; accuracy lower during lake breeze transitions.`;
+  }
+}
+
+function getModelPlusSixty() {
+  if (!modelForecastData || modelForecastData.length < 2) return null;
+  return modelForecastData[1] || null;
 }
 
 // ═══════════════════════════════════════════════════
