@@ -1651,7 +1651,7 @@ function parseLine(line) {
 
 // Build the URL for today's data
 function getTodayUrl() {
-  return '/api/glerl';
+  return 'https://glerl-proxy.edward-k-mui.workers.dev/';
 }
 
 async function fetchGLERL() {
@@ -3271,7 +3271,7 @@ drawTicks();
 renderSeasonalPanel();
 loadData();
 // Auto-refresh every 2 minutes (GLERL updates every 2 min)
-setInterval(loadData, 120000);
+setInterval(loadData, 300000);
 </script>
 </body>
 </html>
