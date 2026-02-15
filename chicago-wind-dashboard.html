@@ -1897,6 +1897,7 @@ function renderForecast(data) {
 
 function renderAnalysis(data) {
   if (data.length < 10) return;
+  const hourCST = ((new Date().getUTCHours() - 6 + 24) % 24);
   const recent = data.slice(-30); // last hour (30 × 2min)
   const first = recent[0];
   const last = recent[recent.length - 1];
