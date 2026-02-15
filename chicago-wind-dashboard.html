@@ -1320,6 +1320,199 @@
   .model-delta-down { color: var(--accent3); }
   .model-delta-same { color: var(--muted); }
 
+  /* ── STATION NETWORK PANEL ── */
+  .station-network-panel {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 16px;
+    padding: 24px 28px;
+    animation: fadeSlideIn 0.5s ease both;
+    animation-delay: 0.2s;
+  }
+  .station-network-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .station-network-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .station-network-subtitle {
+    font-size: 10px;
+    color: var(--muted2);
+    margin-top: 2px;
+    letter-spacing: 0.06em;
+  }
+  .station-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 900px) { .station-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .station-grid { grid-template-columns: 1fr; } }
+
+  .station-card {
+    background: rgba(10,20,40,0.5);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 0.3s;
+  }
+  .station-card.on-course {
+    border-color: rgba(57,255,140,0.3);
+    background: rgba(57,255,140,0.03);
+  }
+  .station-card.upstream {
+    border-color: rgba(0,212,255,0.2);
+  }
+  .station-card.loading {
+    opacity: 0.5;
+  }
+  .station-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .station-id {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  .station-card.on-course .station-id { color: var(--accent3); }
+  .station-role {
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(90,122,154,0.15);
+    color: var(--muted);
+  }
+  .station-card.on-course .station-role {
+    background: rgba(57,255,140,0.12);
+    color: var(--accent3);
+  }
+  .station-name {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .station-wind-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .station-wind-arrow {
+    font-size: 18px;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .station-wind-spd {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .station-wind-unit {
+    font-size: 9px;
+    color: var(--muted2);
+    letter-spacing: 0.08em;
+  }
+  .station-wind-dir {
+    font-size: 11px;
+    color: var(--accent3);
+    margin-bottom: 4px;
+  }
+  .station-gust {
+    font-size: 10px;
+    color: var(--warn);
+  }
+  .station-temp {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .station-delta {
+    font-size: 10px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .station-delta .delta-up   { color: var(--danger); }
+  .station-delta .delta-down { color: var(--accent3); }
+  .station-status {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+  .station-status.live   { background: var(--accent3); }
+  .station-status.error  { background: var(--danger); }
+  .station-status.load   { background: var(--muted2); }
+
+  /* Lake breeze meter */
+  .lb-meter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .lb-meter-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    white-space: nowrap;
+  }
+  .lb-meter-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .lb-meter-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 1s ease;
+  }
+  .lb-meter-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent3);
+    white-space: nowrap;
+  }
+  .lb-meter-note {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
   /* ── RACE STRATEGY PANEL ── */
   .strategy-panel {
     grid-column: 1 / -1;
@@ -1852,6 +2045,102 @@
   </div>
 
   <!-- ══════════════════════════════════════════════ -->
+  <!-- STATION NETWORK PANEL                          -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="station-network-panel">
+    <div class="station-network-header">
+      <div>
+        <div class="station-network-title">📡 Station Network</div>
+        <div class="station-network-subtitle">Live observations — upstream stations + on-course</div>
+      </div>
+      <div id="stationNetworkUpdated" style="font-size:10px;color:var(--muted2);"></div>
+    </div>
+
+    <div class="station-grid">
+      <!-- CNII2 — Northerly Island (on course) -->
+      <div class="station-card on-course loading" id="stCard-CNII2">
+        <div class="station-card-header">
+          <div class="station-id">CNII2</div>
+          <div class="station-role">ON COURSE</div>
+        </div>
+        <div class="station-name">Northerly Island</div>
+        <div class="station-wind-row">
+          <div class="station-wind-arrow" id="stArrow-CNII2">—</div>
+          <div class="station-wind-spd" id="stSpd-CNII2">—</div>
+          <div class="station-wind-unit">KTS</div>
+        </div>
+        <div class="station-wind-dir" id="stDir-CNII2">—</div>
+        <div class="station-gust" id="stGust-CNII2"></div>
+        <div class="station-temp" id="stTemp-CNII2"></div>
+        <div class="station-delta" id="stDelta-CNII2"></div>
+      </div>
+
+      <!-- KORD — O'Hare -->
+      <div class="station-card upstream loading" id="stCard-KORD">
+        <div class="station-card-header">
+          <div class="station-id">KORD</div>
+          <div class="station-role">UPSTREAM W</div>
+        </div>
+        <div class="station-name">O'Hare International</div>
+        <div class="station-wind-row">
+          <div class="station-wind-arrow" id="stArrow-KORD">—</div>
+          <div class="station-wind-spd" id="stSpd-KORD">—</div>
+          <div class="station-wind-unit">KTS</div>
+        </div>
+        <div class="station-wind-dir" id="stDir-KORD">—</div>
+        <div class="station-gust" id="stGust-KORD"></div>
+        <div class="station-temp" id="stTemp-KORD"></div>
+        <div class="station-delta" id="stDelta-KORD"></div>
+      </div>
+
+      <!-- KMDW — Midway -->
+      <div class="station-card upstream loading" id="stCard-KMDW">
+        <div class="station-card-header">
+          <div class="station-id">KMDW</div>
+          <div class="station-role">UPSTREAM SW</div>
+        </div>
+        <div class="station-name">Midway Airport</div>
+        <div class="station-wind-row">
+          <div class="station-wind-arrow" id="stArrow-KMDW">—</div>
+          <div class="station-wind-spd" id="stSpd-KMDW">—</div>
+          <div class="station-wind-unit">KTS</div>
+        </div>
+        <div class="station-wind-dir" id="stDir-KMDW">—</div>
+        <div class="station-gust" id="stGust-KMDW"></div>
+        <div class="station-temp" id="stTemp-KMDW"></div>
+        <div class="station-delta" id="stDelta-KMDW"></div>
+      </div>
+
+      <!-- KGYY — Gary -->
+      <div class="station-card upstream loading" id="stCard-KGYY">
+        <div class="station-card-header">
+          <div class="station-id">KGYY</div>
+          <div class="station-role">UPSTREAM S</div>
+        </div>
+        <div class="station-name">Gary Chicago Intl</div>
+        <div class="station-wind-row">
+          <div class="station-wind-arrow" id="stArrow-KGYY">—</div>
+          <div class="station-wind-spd" id="stSpd-KGYY">—</div>
+          <div class="station-wind-unit">KTS</div>
+        </div>
+        <div class="station-wind-dir" id="stDir-KGYY">—</div>
+        <div class="station-gust" id="stGust-KGYY"></div>
+        <div class="station-temp" id="stTemp-KGYY"></div>
+        <div class="station-delta" id="stDelta-KGYY"></div>
+      </div>
+    </div>
+
+    <!-- Lake breeze thermal meter -->
+    <div class="lb-meter-row">
+      <div class="lb-meter-label">Lake Breeze Index</div>
+      <div class="lb-meter-bar-wrap">
+        <div class="lb-meter-bar" id="lbIndexBar" style="width:0%"></div>
+      </div>
+      <div class="lb-meter-val" id="lbIndexVal">—</div>
+    </div>
+    <div class="lb-meter-note" id="lbIndexNote">Loading station data…</div>
+  </div>
+
   <!-- MARINE FORECAST PANELS                         -->
   <!-- ══════════════════════════════════════════════ -->
   <div class="marine-grid">
@@ -2411,6 +2700,14 @@ async function loadData() {
           `<div style="color:var(--muted);font-size:12px;">Open-Meteo API unavailable. Prediction running on Crib data only.</div>`;
       });
 
+    // Fetch station network — non-blocking, re-renders prediction when ready
+    fetchStationNetwork()
+      .then(stations => {
+        renderStationNetwork(stations, data);
+        renderPrediction(data);   // re-run with upstream signal now available
+      })
+      .catch(e => console.warn('Station network fetch failed:', e));
+
     const now = new Date();
     document.getElementById('updateTime').textContent =
       `Updated ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
@@ -2898,6 +3195,54 @@ function computePrediction(data) {
     }
   ];
 
+  // ── SIGNAL 9: Archive pattern match ──
+  const archive = matchArchivePattern(data);
+  if (archive) {
+    const aw = getArchiveSignalWeight();
+    predSpd   = predSpd   * (1 - aw) + archive.predSpd * aw;
+    predSpd30 = predSpd30 * (1 - aw * 0.5) + archive.predSpd * (aw * 0.5);
+    const dArchive = circDiff(predDir, archive.predDir);
+    predDir   = ((predDir + dArchive * aw) % 360 + 360) % 360;
+    signals.push({
+      icon: '🗂️',
+      name: 'Archive Pattern Match',
+      weight: archive.matchScore > 55 ? 'medium' : 'low',
+      weightLabel: archive.matchScore > 55 ? `MED WEIGHT (${Math.round(aw*100)}%)` : `LOW WEIGHT (${Math.round(aw*100)}%)`,
+      desc: `${archive.label} — top score ${archive.matchScore}/70 across ${archive.nMatches} historical analogs. Blends past outcomes for similar conditions (dir, speed, trend, season).`,
+      value: `→ Archive signal: ${degToCompass(archive.predDir)} ${archive.predSpd.toFixed(1)} kts`
+    });
+  } else if (ARCHIVE_BASE_URL) {
+    signals.push({
+      icon: '🗂️',
+      name: 'Archive Pattern Match',
+      weight: 'low',
+      weightLabel: 'NOT LOADED',
+      desc: 'Pattern archive not yet loaded or insufficient data for matching.',
+      value: '→ Not available'
+    });
+  }
+
+  // ── SIGNAL 10: Upstream station signal ──
+  const upstream = upstreamSignalData;
+  if (upstream && Math.abs(upstream.spdDiff) > 3) {
+    const uw = 0.08;
+    predSpd   = predSpd   * (1 - uw) + upstream.upstreamSpd * uw;
+    predSpd30 = predSpd30 * (1 - uw * 0.5) + upstream.upstreamSpd * (uw * 0.5);
+    const dUpstream = upstream.upstreamDir != null ? circDiff(predDir, upstream.upstreamDir) : 0;
+    predDir   = ((predDir + dUpstream * uw * 0.5) % 360 + 360) % 360;
+    const sigName = upstream.signal === 'building' ? '⬆ Building' :
+                    upstream.signal === 'fading'   ? '⬇ Fading'   :
+                    upstream.signal === 'shifting'  ? '↺ Shifting' : '→ Stable';
+    signals.push({
+      icon: '📡',
+      name: `Upstream Station — ${sigName}`,
+      weight: 'medium',
+      weightLabel: 'LOW WEIGHT (8%)',
+      desc: upstream.note,
+      value: `→ ${upstream.upstreamName}: ${upstream.upstreamSpd.toFixed(0)} kts ${upstream.upstreamDir != null ? degToCompass(upstream.upstreamDir) : ''}`
+    });
+  }
+
   return {
     predSpd, predDir, predGust,
     predSpd30, predDir30, predGust30,
@@ -3377,6 +3722,435 @@ function getModelSpreadPenalty() {
   );
   if (!spread) return 0;
   return spread.highSpread ? -10 : 0;
+}
+
+// ═══════════════════════════════════════════════════
+//  STATION NETWORK ENGINE
+//  Live observations from on-course and upstream
+//  weather stations. NWS ASOS (CORS native) +
+//  NDBC C-MAN CNII2 Northerly Island (CORS native).
+//  No proxy needed for any of these sources.
+// ═══════════════════════════════════════════════════
+
+// User-configurable: set to your GitHub Pages URL
+// e.g. 'https://YOUR-USERNAME.github.io/crib-wind'
+const ARCHIVE_BASE_URL = 'https://edwardkmui.github.io/crib-wind';   // ← FILL IN after deploying JSON to GitHub Pages
+
+// Station store — populated by fetchStationNetwork()
+let stationData = {};
+
+/**
+ * Parse NDBC standard meteorological text file (CNII2).
+ * Returns { dir, spdKts, gustKts, tempC, dewC, wvht, time } or null.
+ */
+function parseNDBCText(text) {
+  const lines = text.trim().split('\n');
+  // Find first data line (skip # header lines)
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('#')) continue;
+    const parts = lines[i].trim().split(/\s+/);
+    if (parts.length < 10) continue;
+    // Columns: YY MM DD hh mm WDIR WSPD GST WVHT DPD APD MWD PRES ATMP WTMP DEWP
+    const dir    = parts[5]  === 'MM' ? null : parseInt(parts[5]);
+    const wspd   = parts[6]  === 'MM' ? null : parseFloat(parts[6]);
+    const gst    = parts[7]  === 'MM' ? null : parseFloat(parts[7]);
+    const wvht   = parts[8]  === 'MM' ? null : parseFloat(parts[8]);
+    const atmp   = parts[13] === 'MM' ? null : parseFloat(parts[13]);
+    const wtmp   = parts[14] === 'MM' ? null : parseFloat(parts[14]);
+    const dewp   = parts[15] === 'MM' ? null : parseFloat(parts[15]);
+    return {
+      dir,
+      spdKts: wspd !== null ? wspd * 1.94384 : null,
+      gustKts: gst !== null ? gst * 1.94384 : null,
+      tempC:  atmp,
+      waterTempC: wtmp,
+      dewC:   dewp,
+      wvht,
+      time: `${parts[3]}:${parts[4]} UTC`
+    };
+  }
+  return null;
+}
+
+/**
+ * Parse NWS API observation JSON.
+ * Returns { dir, spdKts, gustKts, tempC, dewC } or null.
+ */
+function parseNWSObs(json) {
+  const p = json.properties;
+  if (!p) return null;
+  return {
+    dir:     p.windDirection?.value ?? null,
+    spdKts:  p.windSpeed?.value   != null ? p.windSpeed.value   * 1.94384 : null,
+    gustKts: p.windGust?.value    != null ? p.windGust.value    * 1.94384 : null,
+    tempC:   p.temperature?.value ?? null,
+    dewC:    p.dewpoint?.value    ?? null,
+    desc:    p.textDescription    ?? ''
+  };
+}
+
+/**
+ * Fetch all station data in parallel. Updates global stationData.
+ */
+async function fetchStationNetwork() {
+  const fetches = await Promise.allSettled([
+    fetch('https://www.ndbc.noaa.gov/data/realtime2/CNII2.txt')
+      .then(r => r.text()).then(t => ({ id: 'CNII2', raw: t, type: 'ndbc' })),
+    fetch('https://api.weather.gov/stations/KORD/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+      .then(r => r.json()).then(j => ({ id: 'KORD', raw: j, type: 'nws' })),
+    fetch('https://api.weather.gov/stations/KMDW/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+      .then(r => r.json()).then(j => ({ id: 'KMDW', raw: j, type: 'nws' })),
+    fetch('https://api.weather.gov/stations/KGYY/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+      .then(r => r.json()).then(j => ({ id: 'KGYY', raw: j, type: 'nws' })),
+  ]);
+
+  stationData = {};
+  for (const result of fetches) {
+    if (result.status !== 'fulfilled') continue;
+    const { id, raw, type } = result.value;
+    const parsed = type === 'ndbc' ? parseNDBCText(raw) : parseNWSObs(raw);
+    if (parsed) stationData[id] = parsed;
+  }
+  return stationData;
+}
+
+/**
+ * Compute Lake Breeze Index from live station data.
+ * Primary driver: land-water temperature differential.
+ * Secondary: wind direction backing toward NE/E, light onshore flow.
+ * Returns { index 0–100, label, note }
+ */
+function computeLakeBreezeIndex(stations, cribbData, hourCST) {
+  const sp = getSeasonalProfile();
+  const seasonalBase = (sp.lakeBreezeProbByHour || Array(24).fill(0))[hourCST] || 0;
+
+  // If it's not the season or not daytime, lake breeze is impossible
+  if (hourCST < 9 || hourCST > 20) {
+    return { index: 0, label: 'NOT ACTIVE', note: 'Lake breeze is a daytime phenomenon (10:00–19:00 CST).' };
+  }
+  if (seasonalBase < 5) {
+    return { index: 0, label: 'SEASON LOW', note: `${sp.name}: lake breeze climatology is low this month.` };
+  }
+
+  let score = seasonalBase; // start from climatology
+
+  // Crib air temp vs KORD (land) temp differential
+  // Crib CNII2 gives air temp; KORD gives land temp
+  const cnii2 = stations['CNII2'];
+  const kord   = stations['KORD'];
+  if (cnii2?.tempC != null && kord?.tempC != null) {
+    const diff = kord.tempC - cnii2.tempC; // land hotter than water = lake breeze driver
+    if (diff > 12) score += 30;
+    else if (diff > 8)  score += 20;
+    else if (diff > 5)  score += 12;
+    else if (diff > 2)  score += 5;
+    else if (diff < 0)  score -= 10; // lake warmer than land: no breeze
+  }
+
+  // Current Crib wind — light S/SW/SE = favorable for lake breeze onset
+  if (cribbData && cribbData.length > 0) {
+    const latest = cribbData[cribbData.length - 1];
+    const dir = degToCompass(latest.dir);
+    if (['S','SSW','SW','SSE','SE'].includes(dir) && latest.spdKts < 10) score += 10;
+    if (latest.spdKts > 15) score -= 20; // strong synoptic wind suppresses lake breeze
+    if (['NE','NNE','E','ENE'].includes(dir)) score += 5; // already in NE flow = partial lb
+  }
+
+  // KORD vs KMDW comparison — land pressure gradient
+  if (kord?.spdKts != null && stations['KMDW']?.spdKts != null) {
+    const landSpd = (kord.spdKts + stations['KMDW'].spdKts) / 2;
+    if (landSpd < 8) score += 5; // light synoptic flow favors lake breeze development
+    if (landSpd > 18) score -= 15;
+  }
+
+  score = Math.min(98, Math.max(0, Math.round(score)));
+
+  let label, note;
+  if (score >= 70) {
+    label = 'HIGH';
+    const diff = kord && cnii2 ? (kord.tempC - cnii2.tempC).toFixed(0) : '?';
+    note = `Strong thermal gradient (land ${diff > 0 ? '+' : ''}${diff}°C vs water). Lake breeze likely to fire — watch for NE fill from the right side, possibly within 30–90 min. Get to starboard.`;
+  } else if (score >= 45) {
+    label = 'MODERATE';
+    note = `Thermal conditions support lake breeze development. Watch for chop line ~0.5–1.5 nm offshore. If it crosses, NE fill will be quick.`;
+  } else if (score >= 20) {
+    label = 'LOW';
+    note = `Some lake breeze potential but synoptic flow or temperature differential is limiting. Unlikely to fire strongly today.`;
+  } else {
+    label = 'NEGLIGIBLE';
+    note = `Conditions don't favor lake breeze. Synoptic wind or season is dominant.`;
+  }
+
+  return { index: score, label, note };
+}
+
+/**
+ * Compute upstream pressure signal — what's coming from land stations.
+ * Returns { signal: 'building'|'fading'|'stable'|'shifting', spdDiff, dirDiff, note }
+ */
+function computeUpstreamSignal(stations, cribLatest) {
+  if (!cribLatest) return null;
+  const cribSpd = cribLatest.spdKts;
+  const cribDir = cribLatest.dir;
+
+  // Weight upstream stations by relevance to current wind direction
+  const cribComp = degToCompass(cribDir);
+  let upstreamSpd = null, upstreamDir = null, upstreamName = '';
+
+  // Pick the most relevant upstream station
+  if (['W','WNW','NW','NNW','SW','WSW'].includes(cribComp)) {
+    const kord = stations['KORD'];
+    if (kord?.spdKts != null) {
+      upstreamSpd = kord.spdKts;
+      upstreamDir = kord.dir;
+      upstreamName = 'KORD (O\'Hare)';
+    }
+  } else if (['S','SSW','SSE','SE'].includes(cribComp)) {
+    const kgyy = stations['KGYY'];
+    if (kgyy?.spdKts != null) {
+      upstreamSpd = kgyy.spdKts;
+      upstreamDir = kgyy.dir;
+      upstreamName = 'KGYY (Gary)';
+    }
+  } else if (['NE','N','NNE','E','ENE'].includes(cribComp)) {
+    const cnii2 = stations['CNII2'];
+    if (cnii2?.spdKts != null) {
+      upstreamSpd = cnii2.spdKts;
+      upstreamDir = cnii2.dir;
+      upstreamName = 'CNII2 (Northerly Island)';
+    }
+  }
+
+  if (upstreamSpd === null) return null;
+
+  const spdDiff = upstreamSpd - cribSpd;
+  const dirDiff = upstreamDir != null ? circDiff(cribDir, upstreamDir) : 0;
+  let signal = 'stable', note = '';
+
+  if (Math.abs(spdDiff) <= 2 && Math.abs(dirDiff) <= 15) {
+    signal = 'stable';
+    note = `${upstreamName} agrees with Crib — conditions consistent, no change expected from this direction.`;
+  } else if (spdDiff > 4) {
+    signal = 'building';
+    note = `${upstreamName} showing ${upstreamSpd.toFixed(0)} kts vs Crib ${cribSpd.toFixed(0)} kts — stronger wind upstream. Expect building conditions in the next 20–40 min.`;
+  } else if (spdDiff < -4) {
+    signal = 'fading';
+    note = `${upstreamName} lighter (${upstreamSpd.toFixed(0)} kts) than Crib (${cribSpd.toFixed(0)} kts) — wind may ease on the course soon.`;
+  } else if (Math.abs(dirDiff) > 20) {
+    signal = 'shifting';
+    note = `${upstreamName} direction ${degToCompass(upstreamDir)} vs Crib ${degToCompass(cribDir)} — wind shift propagating toward the course.`;
+  }
+
+  return { signal, spdDiff, dirDiff, upstreamSpd, upstreamDir, upstreamName, note };
+}
+
+// Global upstream signal — used by strategy engine
+let upstreamSignalData = null;
+
+/**
+ * Render station network panel.
+ */
+function renderStationNetwork(stations, cribData) {
+  const cribLatest = cribData && cribData.length > 0 ? cribData[cribData.length - 1] : null;
+  const now = new Date();
+  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+
+  document.getElementById('stationNetworkUpdated').textContent =
+    `Updated ${now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })} CST`;
+
+  // Render each card
+  const cards = [
+    { id: 'CNII2', data: stations['CNII2'] },
+    { id: 'KORD',  data: stations['KORD']  },
+    { id: 'KMDW',  data: stations['KMDW']  },
+    { id: 'KGYY',  data: stations['KGYY']  },
+  ];
+
+  cards.forEach(({ id, data }) => {
+    const card = document.getElementById(`stCard-${id}`);
+    if (!card) return;
+    card.classList.remove('loading');
+
+    if (!data || data.spdKts == null) {
+      document.getElementById(`stArrow-${id}`).textContent = '—';
+      document.getElementById(`stSpd-${id}`).textContent = '—';
+      document.getElementById(`stDir-${id}`).textContent = 'No data';
+      document.getElementById(`stGust-${id}`).textContent = '';
+      document.getElementById(`stTemp-${id}`).textContent = '';
+      document.getElementById(`stDelta-${id}`).innerHTML =
+        `<span class="station-status error"></span>Unavailable`;
+      return;
+    }
+
+    const spdStr   = data.spdKts.toFixed(1);
+    const dirStr   = data.dir != null ? `${degToCompass(data.dir)} ${data.dir}°` : '—';
+    const arrow    = data.dir != null ? dirArrow(data.dir) : '—';
+
+    document.getElementById(`stArrow-${id}`).textContent = arrow;
+    document.getElementById(`stSpd-${id}`).textContent = spdStr;
+    document.getElementById(`stDir-${id}`).textContent = dirStr;
+
+    if (data.gustKts != null) {
+      document.getElementById(`stGust-${id}`).textContent =
+        `Gust: ${data.gustKts.toFixed(1)} kts`;
+    }
+
+    const tempParts = [];
+    if (data.tempC != null) {
+      const f = (data.tempC * 9/5 + 32).toFixed(0);
+      tempParts.push(`Air: ${data.tempC.toFixed(1)}°C (${f}°F)`);
+    }
+    if (data.waterTempC != null) {
+      const f = (data.waterTempC * 9/5 + 32).toFixed(0);
+      tempParts.push(`Water: ${data.waterTempC.toFixed(1)}°C (${f}°F)`);
+    }
+    document.getElementById(`stTemp-${id}`).textContent = tempParts.join(' · ');
+
+    // Delta vs Crib
+    const deltaEl = document.getElementById(`stDelta-${id}`);
+    if (cribLatest && id !== 'CNII2') {
+      const spdD = data.spdKts - cribLatest.spdKts;
+      const dirD = data.dir != null ? circDiff(cribLatest.dir, data.dir) : null;
+      const spdSign = spdD >= 0 ? '+' : '';
+      const dirSign = dirD >= 0 ? '+' : '';
+      const spdCls = Math.abs(spdD) > 3 ? (spdD > 0 ? 'delta-up' : 'delta-down') : '';
+      deltaEl.innerHTML =
+        `<span class="station-status live"></span>` +
+        `vs Crib: <span class="${spdCls}">${spdSign}${spdD.toFixed(1)} kts</span>` +
+        (dirD != null ? ` · dir ${dirSign}${dirD.toFixed(0)}°` : '');
+    } else {
+      deltaEl.innerHTML = `<span class="station-status live"></span>On-course reference`;
+    }
+  });
+
+  // Lake breeze index
+  const lb = computeLakeBreezeIndex(stations, cribData, hourCST);
+  const lbBar = document.getElementById('lbIndexBar');
+  const lbVal = document.getElementById('lbIndexVal');
+  const lbNote = document.getElementById('lbIndexNote');
+  if (lbBar) {
+    lbBar.style.width = lb.index + '%';
+    const col = lb.index >= 70 ? 'var(--danger)' : lb.index >= 45 ? 'var(--warn)' : 'var(--accent3)';
+    lbBar.style.background = col;
+  }
+  if (lbVal) {
+    lbVal.textContent = `${lb.index}% · ${lb.label}`;
+    lbVal.style.color = lb.index >= 70 ? 'var(--danger)' : lb.index >= 45 ? 'var(--warn)' : 'var(--accent3)';
+  }
+  if (lbNote) lbNote.textContent = lb.note;
+
+  // Compute + cache upstream signal for strategy engine
+  upstreamSignalData = computeUpstreamSignal(stations, cribLatest);
+}
+
+// ═══════════════════════════════════════════════════
+//  ARCHIVE PATTERN MATCH ENGINE
+//  Fetches crib_patterns.json and crib_seasonal.json
+//  from GitHub Pages. Finds the most similar historical
+//  hour and blends its outcome into the prediction.
+// ═══════════════════════════════════════════════════
+
+let archivePatterns  = null;
+let archiveSeasonal  = null;
+let archiveSignal    = null; // { predSpd, predDir, confidence, matchScore, matchLabel }
+
+async function fetchArchivePatterns() {
+  if (!ARCHIVE_BASE_URL) return; // not configured
+  try {
+    const [pRes, sRes] = await Promise.all([
+      fetch(`${ARCHIVE_BASE_URL}/crib_patterns.json`),
+      fetch(`${ARCHIVE_BASE_URL}/crib_seasonal.json`),
+    ]);
+    if (pRes.ok) archivePatterns = await pRes.json();
+    if (sRes.ok) archiveSeasonal = await sRes.json();
+    // Activate the chip
+    const chip = document.getElementById('chip-archive');
+    if (chip && archivePatterns) chip.classList.add('active');
+  } catch (e) {
+    console.warn('Archive fetch failed:', e.message);
+  }
+}
+
+/**
+ * Find the best matching historical pattern for current conditions.
+ * Returns { predSpd, predDir, confidence, matchScore, nMatches, label } or null.
+ */
+function matchArchivePattern(cribData) {
+  if (!archivePatterns || !cribData || cribData.length < 10) return null;
+
+  const latest  = cribData[cribData.length - 1];
+  const window10 = cribData.slice(-10);
+  const now     = new Date();
+  const month   = now.getMonth() + 1; // 1–12
+  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+
+  const curDir   = degToCompass(latest.dir);
+  const curSpd   = latest.spdKts;
+  const curTrend = window10[window10.length-1].spdKts - window10[0].spdKts;
+
+  // Score each pattern by similarity
+  const patterns = archivePatterns.patterns || archivePatterns;
+  const scored = patterns
+    .filter(p => {
+      // Only compare same season (±1 month)
+      const mDiff = Math.abs((p.month || month) - month);
+      return mDiff <= 1 || mDiff >= 11;
+    })
+    .map(p => {
+      let score = 0;
+      // Direction match (most important)
+      const dirDiff = Math.abs(circDiff(latest.dir, p.dir_deg || 0));
+      score += Math.max(0, 40 - dirDiff);
+      // Speed match
+      const spdDiff = Math.abs(curSpd - (p.spd_kts || 0));
+      score += Math.max(0, 20 - spdDiff * 2);
+      // Trend match
+      const trendDiff = Math.abs(curTrend - (p.trend_kts || 0));
+      score += Math.max(0, 10 - trendDiff * 2);
+      // Hour-of-day match
+      const hDiff = Math.abs((p.hour || hourCST) - hourCST);
+      score += Math.max(0, 10 - hDiff);
+      return { ...p, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20); // top 20 matches
+
+  if (scored.length === 0) return null;
+
+  // Weighted average of top matches' outcomes
+  const totalScore = scored.reduce((s, p) => s + p.score, 0);
+  if (totalScore === 0) return null;
+
+  let wSumSpd = 0, wSumSinDir = 0, wSumCosDir = 0;
+  scored.forEach(p => {
+    const w = p.score / totalScore;
+    wSumSpd += w * (p.outcome_spd_kts || p.spd_kts || curSpd);
+    const outDir = (p.outcome_dir_deg || p.dir_deg || latest.dir) * Math.PI / 180;
+    wSumSinDir += w * Math.sin(outDir);
+    wSumCosDir += w * Math.cos(outDir);
+  });
+
+  const predSpd = wSumSpd;
+  let predDir = Math.atan2(wSumSinDir, wSumCosDir) * 180 / Math.PI;
+  predDir = ((predDir % 360) + 360) % 360;
+
+  // Confidence: based on top match score and spread of outcomes
+  const topScore = scored[0].score;
+  const matchConf = Math.min(85, Math.round(topScore * 1.2));
+  const label = topScore > 55 ? 'Strong match' : topScore > 35 ? 'Moderate match' : 'Weak match';
+
+  archiveSignal = { predSpd, predDir, matchConf, matchScore: topScore, nMatches: scored.length, label };
+  return archiveSignal;
+}
+
+function getArchiveSignalWeight() {
+  if (!archiveSignal) return 0;
+  if (archiveSignal.matchScore > 55) return 0.10;
+  if (archiveSignal.matchScore > 35) return 0.07;
+  return 0.04;
 }
 
 // ═══════════════════════════════════════════════════
@@ -3996,7 +4770,8 @@ function setChartMode(mode, btn) {
 drawTicks();
 renderSeasonalPanel();
 loadData();
-// Auto-refresh every 2 minutes (GLERL updates every 2 min)
+fetchArchivePatterns(); // fetch once — archive doesn't change during a session
+// Auto-refresh every 5 minutes
 setInterval(loadData, 300000);
 </script>
 </body>
