@@ -1650,13 +1650,7 @@ function parseLine(line) {
 
 // Build the URL for today's data
 function getTodayUrl() {
-  const now = new Date();
-  const y = now.getUTCFullYear();
-  const start = new Date(Date.UTC(y, 0, 1));
-  const doy = Math.floor((now - start) / 86400000) + 1;
-  const mm = String(now.getUTCMonth()+1).padStart(2,'0');
-  const dd = String(now.getUTCDate()).padStart(2,'0');
-  return `https://www.glerl.noaa.gov/metdata/chi/${y}/${y}${mm}${dd}.04t.txt`;
+  return '/api/glerl';
 }
 
 async function fetchGLERL() {
