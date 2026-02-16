@@ -2482,11 +2482,19 @@ function getYesterdayUrl() {
   return `https://glerl-proxy.edward-k-mui.workers.dev/?date=${y}${mm}${dd}`;
 }
 
+// Timeout helper — abort fetch after N seconds
+function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .finally(() => clearTimeout(timeout));
+}
+
 async function fetchGLERL() {
   // Fetch today and yesterday in parallel, merge, dedupe, sort
   const [todayResp, yestResp] = await Promise.allSettled([
-    fetch(getTodayUrl(),       { cache: 'no-store' }),
-    fetch(getYesterdayUrl(),   { cache: 'no-store' })
+    fetchWithTimeout(getTodayUrl(), { cache: 'no-store' }, 10000),
+    fetchWithTimeout(getYesterdayUrl(), { cache: 'no-store' }, 10000)
   ]);
 
   const parseResp = async (result) => {
@@ -3600,17 +3608,17 @@ let nwsForecastData = null;
 let modelForecastData = null;
 
 async function fetchNWSForecast() {
-  const listRes = await fetch('https://api.weather.gov/products/types/NSH/locations/LOT', {
+  const listRes = await fetchWithTimeout('https://api.weather.gov/products/types/NSH/locations/LOT', {
     headers: { 'User-Agent': 'CribWindDashboard/1.0 (chicago-sailing-weather)' }
-  });
+  }, 8000);
   if (!listRes.ok) throw new Error(`NWS list HTTP ${listRes.status}`);
   const listData = await listRes.json();
   const products = listData['@graph'];
   if (!products || !products.length) throw new Error('No NSH products');
   const latestId = products[0].id;
-  const prodRes = await fetch(`https://api.weather.gov/products/${latestId}`, {
+  const prodRes = await fetchWithTimeout(`https://api.weather.gov/products/${latestId}`, {
     headers: { 'User-Agent': 'CribWindDashboard/1.0 (chicago-sailing-weather)' }
-  });
+  }, 8000);
   if (!prodRes.ok) throw new Error(`NWS product HTTP ${prodRes.status}`);
   const prodData = await prodRes.json();
   return { text: prodData.productText, issuanceTime: prodData.issuanceTime };
@@ -3719,8 +3727,8 @@ let gfsForecastData = null; // raw GFS hourly for spread calc
 async function fetchOpenMeteo() {
   // Fetch HRRR and GFS in parallel
   const [hrrrRes, gfsRes] = await Promise.allSettled([
-    fetch(HRRR_URL).then(r => { if (!r.ok) throw new Error(`HRRR HTTP ${r.status}`); return r.json(); }),
-    fetch(GFS_URL).then(r  => { if (!r.ok) throw new Error(`GFS HTTP ${r.status}`);  return r.json(); })
+    fetchWithTimeout(HRRR_URL, {}, 12000).then(r => { if (!r.ok) throw new Error(`HRRR HTTP ${r.status}`); return r.json(); }),
+    fetchWithTimeout(GFS_URL, {}, 12000).then(r  => { if (!r.ok) throw new Error(`GFS HTTP ${r.status}`);  return r.json(); })
   ]);
 
   const hrrrOk = hrrrRes.status === 'fulfilled';
@@ -4012,16 +4020,16 @@ function parseNWSObs(json) {
  */
 async function fetchStationNetwork() {
   const fetches = await Promise.allSettled([
-    fetch(getTodayUrl() + '?source=cnii2')
+    fetchWithTimeout(getTodayUrl() + '?source=cnii2', {}, 8000)
       .then(r => r.text()).then(t => ({ id: 'CNII2', raw: t, type: 'ndbc' })),
-    fetch('https://api.weather.gov/stations/KORD/observations/latest',
-      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+    fetchWithTimeout('https://api.weather.gov/stations/KORD/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } }, 8000)
       .then(r => r.json()).then(j => ({ id: 'KORD', raw: j, type: 'nws' })),
-    fetch('https://api.weather.gov/stations/KMDW/observations/latest',
-      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+    fetchWithTimeout('https://api.weather.gov/stations/KMDW/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } }, 8000)
       .then(r => r.json()).then(j => ({ id: 'KMDW', raw: j, type: 'nws' })),
-    fetch('https://api.weather.gov/stations/KGYY/observations/latest',
-      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
+    fetchWithTimeout('https://api.weather.gov/stations/KGYY/observations/latest',
+      { headers: { 'User-Agent': 'CribWindDashboard/1.0' } }, 8000)
       .then(r => r.json()).then(j => ({ id: 'KGYY', raw: j, type: 'nws' })),
   ]);
 
@@ -4984,10 +4992,22 @@ function setChartMode(mode, btn) {
 
 drawTicks();
 renderSeasonalPanel();
-loadData();
+// Wait for DOM, then load data
+document.addEventListener('DOMContentLoaded', () => {
+  loadData().catch(err => {
+    console.error('Initial data load failed:', err);
+    setLiveStatus('error');
+    document.getElementById('updateTime').textContent = 'CORS blocked — demo mode';
+    // Fall back to demo data if live fetch fails
+    loadDemoData();
+  });
+});
+
 fetchArchivePatterns(); // fetch once — archive doesn't change during a session
 // Auto-refresh every 5 minutes
-setInterval(loadData, 300000);
+setInterval(() => {
+  loadData().catch(err => console.error('Auto-refresh failed:', err));
+}, 300000);
 </script>
 </body>
 </html>
