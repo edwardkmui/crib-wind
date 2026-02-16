@@ -28,6 +28,7 @@
     background: var(--bg);
     color: var(--text);
     font-family: 'DM Mono', monospace;
+    font-size: 16px;
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -1699,6 +1700,88 @@
     border: 1px solid rgba(255,184,48,0.2);
     color: var(--warn);
   }
+
+  /* ── MOBILE (≤600px) ── */
+  @media (max-width: 600px) {
+
+    /* Header: un-stick it, shrink padding, hide subtitle */
+    header {
+      position: relative;
+      padding: 12px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .brand-sub { display: none; }
+    .brand-name { font-size: 18px; }
+
+    /* Collapse status bar items */
+    .status-bar { gap: 10px; }
+    .update-time { font-size: 10px; }
+    .live-dot { font-size: 10px; }
+
+    /* Refresh button: icon only */
+    .refresh-btn { font-size: 16px; padding: 6px 10px; letter-spacing: 0; }
+    .refresh-btn-text { display: none; }
+
+    /* Main grid: tighter padding */
+    .main-grid {
+      padding: 12px;
+      gap: 12px;
+    }
+
+    /* Hero wind number: bigger for glanceability */
+    .wind-speed-display { font-size: 72px; }
+    .wind-dir-text { font-size: 32px; }
+    .wind-deg { font-size: 14px; }
+
+    /* Mini stats: larger text */
+    .mini-stat-value { font-size: 22px; }
+    .mini-stat-label { font-size: 10px; }
+
+    /* Chart: ensure it doesn't get squished */
+    .chart-container { height: 200px; }
+
+    /* Bottom grid: already single-col via 1000px breakpoint,
+       but ensure panels don't have excess padding */
+    .forecast-panel,
+    .analysis-panel,
+    .local-panel,
+    .prediction-panel,
+    .marine-panel,
+    .station-network-panel,
+    .strategy-panel {
+      padding: 16px;
+    }
+
+    /* Pred +30/+60 cards: keep side-by-side (important numbers) */
+    .pred-30-row {
+      grid-template-columns: 1fr 1fr 1fr; /* keep 3-col */
+    }
+    .pred-30-value { font-size: 22px; }
+
+    /* Pred main row: already goes to 1fr via 600px query above */
+    .pred-card-value { font-size: 28px; }
+
+    /* Station grid: already 2-col at 900px, 1-col at 500px — ok */
+
+    /* NWS / marine text: wrap it in summary/details via JS,
+       but also shrink base font */
+    .nws-period-text { font-size: 13px; line-height: 1.8; }
+
+    /* Meteo table: reduce padding so it fits */
+    .meteo-table td, .meteo-table th { padding: 6px 5px; font-size: 11px; }
+
+    /* Feed table: shrink */
+    .feed-table td, .feed-table th { padding: 6px 8px; font-size: 11px; }
+
+    /* Signal grid: single column */
+    .signal-grid { grid-template-columns: 1fr; }
+
+    /* Strategy sections: already 1-col at 700px */
+
+    /* Trend panel padding */
+    .trend-panel { padding: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -1716,7 +1799,7 @@
       <span id="liveLabel">LIVE</span>
     </div>
     <div class="update-time" id="updateTime">—</div>
-    <button class="refresh-btn" onclick="loadData()">↻ REFRESH</button>
+    <button class="refresh-btn" onclick="loadData()">↻ <span class="refresh-btn-text">REFRESH</span></button>
   </div>
 </header>
 
