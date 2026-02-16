@@ -2533,9 +2533,9 @@ function setLiveStatus(state) {
 }
 
 function renderHero(d) {
-  // Compass arrow: arrow points in the direction the wind is going (from = rotate 180°)
-  // NOAA "dir" = degrees FROM which wind comes; arrow shows direction wind blows TO
-  const arrowDeg = d.dir + 180;
+  // Compass arrow: arrow points toward wind source (FROM convention — standard met/sailing)
+  // NOAA "dir" = degrees FROM which wind comes; arrow points back toward that source
+  const arrowDeg = d.dir;
   document.getElementById('arrowWrap').style.transform = `rotate(${arrowDeg}deg)`;
 
   document.getElementById('windSpd').textContent = d.spdKts.toFixed(1);
@@ -2950,7 +2950,7 @@ function loadDemoData() {
   ];
 
   const latest = demo[demo.length - 1];
-  const arrowDeg = latest.dir + 180;
+  const arrowDeg = latest.dir;
   document.getElementById('arrowWrap').style.transform = `rotate(${arrowDeg}deg)`;
   document.getElementById('windSpd').textContent = latest.spdKts.toFixed(1);
   document.getElementById('windDir').textContent = degToCompass(latest.dir);
