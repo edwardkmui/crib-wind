@@ -2418,11 +2418,23 @@ function raceScore(kts, gst, dir) {
 
 function renderChart(data) {
   if (!data.length) return;
-  // Sample every 30th point (hourly equivalent from 2-min data) for readability, take last 18 hrs
-  const hourly = [];
-  for (let i = 0; i < data.length; i += 30) hourly.push(data[i]);
-  const recent = hourly.slice(-18);
 
+  // Slice last 18 hours of raw data first, THEN sample for readability
+  const nowMs = Date.now();
+  const cutoff = nowMs - (18 * 60 * 60 * 1000);
+  const last18hrs = data.filter(d => {
+    const t = Date.UTC(d.year, 0, d.doy, parseInt(d.utc.substring(0,2)), parseInt(d.utc.substring(2,4)));
+    return t >= cutoff;
+  });
+
+  // Sample every 30th point for readability (keep at most ~36 points)
+  const sampled = [];
+  for (let i = 0; i < last18hrs.length; i += 30) sampled.push(last18hrs[i]);
+  // Always include the very last obs so chart reaches current time
+  const lastObs = last18hrs[last18hrs.length - 1];
+  if (sampled.length && sampled[sampled.length - 1] !== lastObs) sampled.push(lastObs);
+
+  const recent = sampled;
   const labels = recent.map(d => d.timeLabel);
   const speeds = recent.map(d => d.spdKts);
   const gusts  = recent.map(d => d.gstKts);
