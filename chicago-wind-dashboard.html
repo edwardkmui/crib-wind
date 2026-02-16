@@ -1902,7 +1902,7 @@
         <div class="source-tag">Harrison-Dever Crib · glerl.noaa.gov · 2-min resolution</div>
       </div>
       <div class="source-tag" style="text-align:right">
-        NDBC Station CHII2<br>41.767°N  87.533°W<br>2.75 mi offshore
+        NDBC Station CHII2<br>41°54'58"N 87°34'22"W<br>2.75 mi offshore · racing 1 mi east
       </div>
     </div>
     <div style="overflow-x:auto;">
@@ -2167,7 +2167,7 @@
       <div class="marine-header">
         <div>
           <div class="marine-title">🌐 HRRR + GFS Model Forecast</div>
-          <div class="marine-issued">41.767°N 87.533°W · HRRR 3km primary · GFS 13km fallback · 15-min res</div>
+          <div class="marine-issued">41.916°N 87.573°W · HRRR 3km primary · GFS 13km fallback · 15-min res · race course cell</div>
         </div>
         <span class="marine-status status-load" id="meteoStatus">LOADING</span>
       </div>
@@ -3488,7 +3488,7 @@ function renderNWSForecast(rawData) {
 // HRRR via dedicated /v1/gfs endpoint — 15-min resolution, 48h
 const HRRR_URL =
   'https://api.open-meteo.com/v1/gfs' +
-  '?latitude=41.767&longitude=-87.533' +
+  '?latitude=41.916&longitude=-87.573' +
   '&minutely_15=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
   '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
   '&models=ncep_hrrr_conus';
@@ -3496,7 +3496,7 @@ const HRRR_URL =
 // GFS fallback — hourly, 48h (also used for spread calculation)
 const GFS_URL =
   'https://api.open-meteo.com/v1/gfs' +
-  '?latitude=41.767&longitude=-87.533' +
+  '?latitude=41.916&longitude=-87.573' +
   '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
   '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
   '&models=ncep_gfs013';
@@ -4770,7 +4770,7 @@ renderSeasonalPanel();
 loadData();
 fetchArchivePatterns(); // fetch once — archive doesn't change during a session
 // Auto-refresh every 5 minutes
-setInterval(loadData, 900000);
+setInterval(loadData, 300000);
 </script>
 </body>
 </html>
