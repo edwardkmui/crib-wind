@@ -410,70 +410,11 @@
   .bottom-grid {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
 
   /* ── FORECAST PANEL ── */
-  .forecast-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-  }
-
-  .forecast-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(30,48,80,0.5);
-    gap: 14px;
-  }
-
-  .forecast-item:last-child { border-bottom: none; }
-
-  .forecast-time {
-    font-size: 11px;
-    color: var(--muted);
-    width: 48px;
-    flex-shrink: 0;
-  }
-
-  .forecast-arrow {
-    font-size: 20px;
-    width: 28px;
-    text-align: center;
-    transition: transform 0.3s;
-  }
-
-  .forecast-data {
-    flex: 1;
-  }
-
-  .forecast-spd {
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text);
-  }
-
-  .forecast-dir {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 1px;
-  }
-
-  .forecast-badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 3px;
-    letter-spacing: 0.08em;
-  }
-
-  .badge-good { background: rgba(57,255,140,0.12); color: var(--accent3); border: 1px solid rgba(57,255,140,0.2); }
-  .badge-ok { background: rgba(255,184,48,0.12); color: var(--warn); border: 1px solid rgba(255,184,48,0.2); }
-  .badge-strong { background: rgba(255,61,90,0.12); color: var(--danger); border: 1px solid rgba(255,61,90,0.2); }
-
   /* ── ANALYSIS PANEL ── */
   .analysis-panel {
     background: var(--surface);
@@ -742,14 +683,13 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .hero-wind, .trend-panel, .forecast-panel, .analysis-panel, .local-panel, .data-feed {
+  .hero-wind, .trend-panel, .analysis-panel, .local-panel, .data-feed {
     animation: fadeSlideIn 0.5s ease both;
   }
 
   .trend-panel { animation-delay: 0.05s; }
-  .forecast-panel { animation-delay: 0.1s; }
-  .analysis-panel { animation-delay: 0.15s; }
-  .local-panel { animation-delay: 0.2s; }
+  .analysis-panel { animation-delay: 0.1s; }
+  .local-panel { animation-delay: 0.15s; }
 
   /* ── RESPONSIVE ── */
   @media (max-width: 1000px) {
@@ -1756,7 +1696,6 @@
     .tab { font-size: 13px; padding: 6px 16px; }
 
     /* Bottom grid panels */
-    .forecast-panel,
     .analysis-panel,
     .local-panel,
     .prediction-panel,
@@ -1766,14 +1705,7 @@
       padding: 16px;
     }
 
-    /* Forecast list */
-    .forecast-time { font-size: 14px; }
-    .forecast-spd { font-size: 22px; }
-    .forecast-dir { font-size: 14px; }
-    .forecast-arrow { font-size: 24px; }
-    .forecast-badge { font-size: 13px; }
-
-    /* Trend analysis */
+    /* Pred +30/+60 cards */
     .trend-text { font-size: 15px; }
     .trend-text strong { font-size: 16px; }
     .trend-icon { font-size: 22px; }
@@ -1963,16 +1895,6 @@
 
   <!-- BOTTOM ROW -->
   <div class="bottom-grid">
-
-    <!-- FORECAST -->
-    <div class="forecast-panel">
-      <div class="section-label">Hourly Forecast</div>
-      <div id="forecastList">
-        <div class="loading-shimmer" style="margin-bottom:10px;height:48px;border-radius:8px;"></div>
-        <div class="loading-shimmer" style="margin-bottom:10px;height:48px;border-radius:8px;"></div>
-        <div class="loading-shimmer" style="height:48px;border-radius:8px;"></div>
-      </div>
-    </div>
 
     <!-- TREND ANALYSIS -->
     <div class="analysis-panel">
@@ -2729,50 +2651,6 @@ function dirArrow(deg) {
   return arrows[Math.round(deg / 45) % 8];
 }
 
-function renderForecast(data) {
-  // Use last few hours to extrapolate + add a note
-  // In production: fetch from NWS/Open-Meteo marine API
-  const recent = data.slice(-6);
-  if (!recent.length) return;
-
-  const avgSpd = recent.reduce((s,d) => s + d.spdKts, 0) / recent.length;
-  const avgDir = recent.reduce((s,d) => s + d.dir, 0) / recent.length;
-  const trend = recent[recent.length-1].spdKts - recent[0].spdKts;
-
-  const items = [];
-  const now = new Date();
-  for (let h = 1; h <= 6; h++) {
-    const hr = new Date(now.getTime() + h * 3600000);
-    const label = `+${h}h`;
-    const projSpd = Math.max(3, avgSpd + trend * h * 0.3);
-    const projDir = (avgDir + h * 5) % 360;
-    const g = projSpd * 1.25;
-
-    let badge, badgeCls;
-    if (projSpd >= 8 && projSpd <= 18) { badge = 'GOOD'; badgeCls = 'badge-good'; }
-    else if (projSpd > 18) { badge = 'STRONG'; badgeCls = 'badge-strong'; }
-    else { badge = 'LIGHT'; badgeCls = 'badge-ok'; }
-
-    items.push(`
-      <div class="forecast-item">
-        <div class="forecast-time">${label}</div>
-        <div class="forecast-arrow">${dirArrow(projDir)}</div>
-        <div class="forecast-data">
-          <div class="forecast-spd">${projSpd.toFixed(1)} <span style="font-size:12px;color:var(--muted)">kts</span></div>
-          <div class="forecast-dir">${degToCompass(projDir)} · ${Math.round(projDir)}° · Gust ~${g.toFixed(0)} kts</div>
-        </div>
-        <span class="forecast-badge ${badgeCls}">${badge}</span>
-      </div>
-    `);
-  }
-
-  document.getElementById('forecastList').innerHTML = items.join('') +
-    `<div style="margin-top:10px;font-size:10px;color:var(--muted2);line-height:1.6;">
-      ⚠ Short-range extrapolation from NOAA GLERL data.<br>
-      For NWS marine forecasts: <span style="color:var(--accent)">weather.gov/lmk</span>
-    </div>`;
-}
-
 function renderAnalysis(data) {
   if (data.length < 10) return;
   const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(new Date())) % 24;
@@ -2893,7 +2771,6 @@ async function loadData() {
     renderHero(latest);
     renderChart(data);
     renderFeed(data);
-    renderForecast(data);
     renderAnalysis(data);
     renderPrediction(data);
     renderSeasonalPanel();
@@ -3041,26 +2918,6 @@ function loadDemoData() {
   barsEl.innerHTML = demo.map((d, i) =>
     `<div class="hist-bar ${i===demo.length-1?'active':''}" style="height:${Math.round(d.spdKts/maxS*100)}%"></div>`
   ).join('');
-
-  // Forecast
-  document.getElementById('forecastList').innerHTML = [
-    {h:'+1h', spd:10.2, dir:282, badge:'GOOD', cls:'badge-good'},
-    {h:'+2h', spd:11.8, dir:290, badge:'GOOD', cls:'badge-good'},
-    {h:'+3h', spd:12.4, dir:295, badge:'GOOD', cls:'badge-good'},
-    {h:'+4h', spd:13.1, dir:298, badge:'GOOD', cls:'badge-good'},
-    {h:'+5h', spd:11.6, dir:302, badge:'GOOD', cls:'badge-good'},
-    {h:'+6h', spd:9.3,  dir:305, badge:'GOOD', cls:'badge-good'},
-  ].map(f => `
-    <div class="forecast-item">
-      <div class="forecast-time">${f.h}</div>
-      <div class="forecast-arrow">${dirArrow(f.dir)}</div>
-      <div class="forecast-data">
-        <div class="forecast-spd">${f.spd.toFixed(1)} <span style="font-size:12px;color:var(--muted)">kts</span></div>
-        <div class="forecast-dir">${degToCompass(f.dir)} · ${f.dir}° · Gust ~${(f.spd*1.25).toFixed(0)} kts</div>
-      </div>
-      <span class="forecast-badge ${f.cls}">${f.badge}</span>
-    </div>
-  `).join('') + `<div style="margin-top:10px;font-size:10px;color:var(--muted2);line-height:1.6;">⚠ Demo data shown — CORS blocked live fetch. See iOS guide below for backend setup.</div>`;
 
   document.getElementById('updateTime').textContent = 'Demo mode — CORS restricted';
   renderDemoPrediction();
