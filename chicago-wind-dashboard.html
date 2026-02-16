@@ -2293,8 +2293,10 @@ function parseLine(line) {
 
   const h = parseInt(utc.substring(0,2));
   const m = parseInt(utc.substring(2,4));
-  const cstH = ((h - 6 + 24) % 24);
-  const timeLabel = `${String(cstH).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  // Build a real Date from the DOY/UTC fields so Intl handles CST/CDT automatically
+  const obsDate = new Date(Date.UTC(year, 0, doy, h, m));
+  const fmt = new Intl.DateTimeFormat('en-US', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/Chicago' });
+  const timeLabel = fmt.format(obsDate).replace(/^24:/, '00:'); // Intl quirk: midnight = '24:00'
 
   const airF = (airC * 9/5 + 32).toFixed(1);
   const spdKts = parseFloat(ms2kts(spdMs));
@@ -2553,7 +2555,7 @@ function renderForecast(data) {
 
 function renderAnalysis(data) {
   if (data.length < 10) return;
-  const hourCST = ((new Date().getUTCHours() - 6 + 24) % 24);
+  const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(new Date())) % 24;
   const recent = data.slice(-30); // last hour (30 × 2min)
   const first = recent[0];
   const last = recent[recent.length - 1];
@@ -2711,7 +2713,7 @@ async function loadData() {
 
     const now = new Date();
     document.getElementById('updateTime').textContent =
-      `Updated ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})}`;
+      `Updated ${now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', timeZone:'America/Chicago'})}`;
 
     setLiveStatus('live');
   } catch (err) {
@@ -3041,7 +3043,7 @@ function computePrediction(data) {
 
   // ── SIGNAL 7: Local knowledge adjustment ──
   const now = new Date();
-  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(now)) % 24;
   const lk = localKnowledgeAdj(latest.dir, latest.spdKts, hourCST);
   predSpd   = Math.max(0, predSpd   + lk.spdAdj);
   predSpd30 = Math.max(0, predSpd30 + lk.spdAdj * 0.6); // smaller adj at 30-min
@@ -3269,7 +3271,7 @@ function renderPrediction(data) {
   const future30 = new Date(now.getTime() + 1800000);
   const future60 = new Date(now.getTime() + 3600000);
   document.getElementById('predTimestamp').textContent =
-    `Now: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} → +30: ${future30.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} → +60: ${future60.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+    `Now: ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'})} → +30: ${future30.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'})} → +60: ${future60.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'})} CST`;
 
   // ── 30-MINUTE CARDS ──
   document.getElementById('pred30Spd').textContent = p.predSpd30.toFixed(1);
@@ -3447,7 +3449,7 @@ function renderNWSForecast(rawData) {
   nwsForecastData = periods;
   const issued = new Date(rawData.issuanceTime);
   document.getElementById('nwsIssued').textContent =
-    `LMZ740–742 · Issued ${issued.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST · ${issued.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}`;
+    `LMZ740–742 · Issued ${issued.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'})} CST · ${issued.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'America/Chicago'})}`;
   document.getElementById('nwsStatus').textContent = 'LIVE';
   document.getElementById('nwsStatus').className = 'marine-status status-live';
   if (!periods.length) {
@@ -3490,7 +3492,7 @@ const HRRR_URL =
   'https://api.open-meteo.com/v1/gfs' +
   '?latitude=41.916&longitude=-87.573' +
   '&minutely_15=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
-  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
+  '&wind_speed_unit=kn&forecast_days=2&timezone=GMT' +
   '&models=ncep_hrrr_conus';
 
 // GFS fallback — hourly, 48h (also used for spread calculation)
@@ -3498,7 +3500,7 @@ const GFS_URL =
   'https://api.open-meteo.com/v1/gfs' +
   '?latitude=41.916&longitude=-87.573' +
   '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m' +
-  '&wind_speed_unit=kn&forecast_days=2&timezone=America%2FChicago' +
+  '&wind_speed_unit=kn&forecast_days=2&timezone=GMT' +
   '&models=ncep_gfs013';
 
 let gfsForecastData = null; // raw GFS hourly for spread calc
@@ -3525,6 +3527,9 @@ async function fetchOpenMeteo() {
 
 function parseHRRR(data) {
   // HRRR returns minutely_15 — 15-min intervals
+  // API returns timezone=GMT strings WITHOUT 'Z' suffix — must append 'Z' so JS
+  // parses them as UTC, not local time. Otherwise index selection is wrong by
+  // the browser's UTC offset (e.g. 6 hrs in CST).
   if (!data || !data.minutely_15) return [];
   const times  = data.minutely_15.time;
   const speeds = data.minutely_15.wind_speed_10m;
@@ -3532,17 +3537,17 @@ function parseHRRR(data) {
   const gusts  = data.minutely_15.wind_gusts_10m;
 
   const now = new Date();
-  // Round down to nearest 15 min
-  const nowMin  = Math.floor(now.getMinutes() / 15) * 15;
-  const nowSlot = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), nowMin);
+  // Round down to nearest 15 min in UTC
+  const nowMs   = now.getTime();
+  const nowSlot = new Date(Math.floor(nowMs / (15 * 60000)) * (15 * 60000));
 
   const rows = [];
   for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
+    const t = new Date(times[i] + 'Z'); // force UTC parse
     if (t >= nowSlot) {
       rows.push({
         time:  t,
-        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago' }),
         spd:   Math.round(speeds[i] * 10) / 10,
         dir:   dirs[i],
         gust:  Math.round(gusts[i] * 10) / 10,
@@ -3556,7 +3561,7 @@ function parseHRRR(data) {
 }
 
 function parseGFS(data) {
-  // GFS returns hourly
+  // GFS returns hourly — same UTC parse fix as parseHRRR
   if (!data || !data.hourly) return [];
   const times  = data.hourly.time;
   const speeds = data.hourly.wind_speed_10m;
@@ -3564,14 +3569,15 @@ function parseGFS(data) {
   const gusts  = data.hourly.wind_gusts_10m;
 
   const now = new Date();
-  const nowHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
+  // Round down to current UTC hour
+  const nowHour = new Date(Math.floor(now.getTime() / 3600000) * 3600000);
   const rows = [];
   for (let i = 0; i < times.length; i++) {
-    const t = new Date(times[i]);
+    const t = new Date(times[i] + 'Z'); // force UTC parse
     if (t >= nowHour) {
       rows.push({
         time:  t,
-        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        label: t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Chicago' }),
         spd:   Math.round(speeds[i] * 10) / 10,
         dir:   dirs[i],
         gust:  Math.round(gusts[i] * 10) / 10,
@@ -3957,10 +3963,10 @@ let upstreamSignalData = null;
 function renderStationNetwork(stations, cribData) {
   const cribLatest = cribData && cribData.length > 0 ? cribData[cribData.length - 1] : null;
   const now = new Date();
-  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(now)) % 24;
 
   document.getElementById('stationNetworkUpdated').textContent =
-    `Updated ${now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })} CST`;
+    `Updated ${now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', timeZone:'America/Chicago' })} CST`;
 
   // Render each card
   const cards = [
@@ -4093,7 +4099,7 @@ function matchArchivePattern(cribData) {
   const latest  = cribData[cribData.length - 1];
   const now     = new Date();
   const month   = now.getMonth() + 1;
-  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(now)) % 24;
   const octant  = Math.round(((latest.dir % 360) + 360) % 360 / 45) % 8;
   const band    = latest.spdKts < 5 ? 0 : latest.spdKts < 10 ? 1 : latest.spdKts < 15 ? 2 :
                   latest.spdKts < 20 ? 3 : latest.spdKts < 25 ? 4 : 5;
@@ -4235,7 +4241,7 @@ function generateStrategy(data, predResult) {
   const latest  = data[data.length - 1];
   const sp      = getSeasonalProfile();
   const now     = new Date();
-  const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const hourCST = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(now)) % 24;
   const dir     = degToCompass(latest.dir);
   const spd     = latest.spdKts;
   const gust    = latest.gstKts;
@@ -4390,7 +4396,7 @@ function renderStrategy(data, predResult) {
   // Meta
   const now = new Date();
   document.getElementById('strategyMeta').textContent =
-    `W-L one-design · Chicago lakefront · ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})} CST`;
+    `W-L one-design · Chicago lakefront · ${now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'America/Chicago'})} CST`;
 
   // Confidence pip
   document.getElementById('strategyConfPip').style.background = s.confColor;
@@ -4669,7 +4675,7 @@ function renderSeasonalPanel() {
   if (lbBar) {
     const probs = p.lakeBreezeProbByHour || Array(24).fill(0);
     const hourlyEvery3 = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
-    const nowHr = ((new Date().getUTCHours() - 6 + 24) % 24);
+    const nowHr = parseInt(new Intl.DateTimeFormat('en-US',{hour:'numeric',hour12:false,timeZone:'America/Chicago'}).format(new Date())) % 24;
     lbBar.innerHTML = hourlyEvery3.map(h => {
       const prob = probs[h] || 0;
       const isNow = h === nowHr;
