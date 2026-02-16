@@ -2304,6 +2304,7 @@ function parseLine(line) {
 }
 
 // Build the URL for today's data
+// Build the URL for today's data
 function getTodayUrl() {
   return 'https://glerl-proxy.edward-k-mui.workers.dev/';
 }
@@ -4079,7 +4080,8 @@ async function fetchArchivePatterns() {
  * Returns { predSpd, predDir, confidence, matchScore, nMatches, label } or null.
  */
 function matchArchivePattern(cribData) {
-  if (!archivePatterns || !cribData || cribData.length < 10) return null;
+  if (!archivePatterns || typeof archivePatterns !== 'object') return null;
+  if (!cribData || cribData.length < 10) return null;
 
   const latest  = cribData[cribData.length - 1];
   const window10 = cribData.slice(-10);
@@ -4092,7 +4094,18 @@ function matchArchivePattern(cribData) {
   const curTrend = window10[window10.length-1].spdKts - window10[0].spdKts;
 
   // Score each pattern by similarity
-  const patterns = archivePatterns.patterns || archivePatterns;
+  // Normalise to array regardless of JSON shape
+  let patterns = null;
+  if (Array.isArray(archivePatterns)) patterns = archivePatterns;
+  else if (Array.isArray(archivePatterns?.patterns)) patterns = archivePatterns.patterns;
+  else if (Array.isArray(archivePatterns?.data))     patterns = archivePatterns.data;
+  else {
+    // Try values of top-level object keys
+    const vals = Object.values(archivePatterns || {});
+    patterns = vals.find(v => Array.isArray(v)) || null;
+  }
+  if (!patterns || patterns.length === 0) return null;
+
   const scored = patterns
     .filter(p => {
       // Only compare same season (±1 month)
