@@ -1853,6 +1853,14 @@
     /* Disclaimer */
     .disclaimer-bar { font-size: 13px; }
   }
+
+  /* ── MOBILE LANDSCAPE (phone on its side) ── */
+  @media (max-height: 500px) and (orientation: landscape) {
+    header {
+      position: relative;
+      padding: 8px 16px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1925,7 +1933,7 @@
     </div>
 
     <div class="race-meter" style="width:100%;margin-top:16px;">
-      <div class="meter-label">Race Condition Score</div>
+      <div class="meter-label">MUI Condition Score</div>
       <div class="meter-score" id="raceScore">—</div>
       <div class="meter-description" id="raceDesc">Loading conditions...</div>
       <div class="meter-bar-wrap" style="margin-top:10px;">
