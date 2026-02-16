@@ -640,12 +640,12 @@
   .feed-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .feed-table th {
     text-align: left;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     color: var(--muted);
     text-transform: uppercase;
@@ -1283,10 +1283,10 @@
   .meteo-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11px;
+    font-size: 14px;
   }
   .meteo-table th {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     color: var(--muted);
     text-transform: uppercase;
@@ -1636,7 +1636,7 @@
     padding: 16px;
   }
   .strategy-section-title {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--muted2);
@@ -1653,7 +1653,7 @@
     gap: 7px;
   }
   .strategy-bullet {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.6;
     color: var(--text);
     padding-left: 16px;
@@ -1664,14 +1664,14 @@
     position: absolute;
     left: 0;
     color: var(--accent3);
-    font-size: 10px;
+    font-size: 12px;
   }
   .strategy-bullet.warn::before { color: var(--warn); }
   .strategy-bullet.danger::before { color: var(--danger); }
 
   /* Narrative paragraph */
   .strategy-narrative {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.85;
     color: var(--text);
     border-top: 1px solid var(--border);
@@ -2076,12 +2076,11 @@
             <th>Speed (kts)</th>
             <th>Gust (kts)</th>
             <th>Temp (°F)</th>
-            <th>RH%</th>
             <th>Change</th>
           </tr>
         </thead>
         <tbody id="feedBody">
-          <tr><td colspan="7"><div class="loading-shimmer"></div></td></tr>
+          <tr><td colspan="6"><div class="loading-shimmer"></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -2712,7 +2711,6 @@ function renderFeed(data) {
       <td><strong style="color:var(--accent)">${d.spdKts}</strong></td>
       <td style="color:var(--warn)">${d.gstKts}</td>
       <td>${d.airF}°F</td>
-      <td>${d.rh ? Math.round(d.rh) + '%' : '—'}</td>
       <td>${changeHtml}</td>
     </tr>`;
   }).join('');
@@ -3011,7 +3009,6 @@ function loadDemoData() {
       <td><strong style="color:var(--accent)">${d.spdKts}</strong></td>
       <td style="color:var(--warn)">${d.gstKts}</td>
       <td>${d.airF}°F</td>
-      <td>${d.rh}%</td>
       <td>—</td>
     </tr>
   `).join('');
@@ -3876,11 +3873,11 @@ function renderOpenMeteo(data) {
           const spreadCls = spread === null ? '' : spread > 4 ? 'model-delta-up' : spread > 2 ? '' : 'model-delta-same';
           return `<tr class="${h.isNow ? 'now-row' : ''}">
             <td>${h.isNow ? '▶ ' : ''}${h.label}</td>
-            <td><span style="font-family:'Syne',sans-serif;font-weight:700;">${dirArrow(h.dir)} ${degToCompass(h.dir)}</span><span style="color:var(--muted2);font-size:10px;margin-left:3px;">${Math.round(h.dir)}°</span></td>
+            <td><span style="font-family:'Syne',sans-serif;font-weight:700;">${dirArrow(h.dir)} ${degToCompass(h.dir)}</span><span style="color:var(--text);font-size:10px;margin-left:3px;">${Math.round(h.dir)}°</span></td>
             <td>
               <div style="display:flex;align-items:center;gap:6px;">
                 <span style="font-family:'Syne',sans-serif;font-weight:700;color:${primaryColor};min-width:32px;">${h.spd}</span>
-                <div style="flex:1;height:4px;background:var(--border);border-radius:2px;">
+                <div style="flex:1;height:2px;background:var(--border);border-radius:2px;">
                   <div style="width:${barW}%;height:100%;background:${primaryColor};border-radius:2px;"></div>
                 </div>
               </div>
@@ -3888,8 +3885,8 @@ function renderOpenMeteo(data) {
             <td style="color:var(--warn);">${h.gust}</td>
             <td class="${cls}">${i === 0 ? '—' : sym}</td>
             ${hrrrRows.length && gfsRows.length
-              ? `<td style="color:var(--muted2);font-size:10px;" class="${spreadCls}">
-                  ${gfsHr ? `${dirArrow(gfsHr.dir)} ${gfsHr.spd} <span style="color:var(--muted2);font-size:10px;">${Math.round(gfsHr.dir)}°</span>` : '—'}
+              ? `<td style="color:var(--text);font-size:10px;" class="${spreadCls}">
+                  ${gfsHr ? `${dirArrow(gfsHr.dir)} ${gfsHr.spd} <span style="color:var(--text);font-size:10px;">${Math.round(gfsHr.dir)}°</span>` : '—'}
                 </td>`
               : ''}
           </tr>`;
