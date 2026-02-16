@@ -2647,7 +2647,9 @@ function renderFeed(data) {
 }
 
 function dirArrow(deg) {
-  const arrows = ['↓','↙','←','↖','↑','↗','→','↘'];
+  // Arrow points FROM (toward wind source) — standard sailing/met convention
+  // Rotated 180° from "wind TO" convention
+  const arrows = ['↑','↗','→','↘','↓','↙','←','↖'];
   return arrows[Math.round(deg / 45) % 8];
 }
 
