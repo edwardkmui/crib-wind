@@ -2311,13 +2311,53 @@ function getTodayUrl() {
   return 'https://glerl-proxy.edward-k-mui.workers.dev/';
 }
 
+function getYesterdayUrl() {
+  const now = new Date();
+  const yest = new Date(now);
+  yest.setUTCDate(yest.getUTCDate() - 1);
+  const y  = yest.getUTCFullYear();
+  const mm = String(yest.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(yest.getUTCDate()).padStart(2, '0');
+  return `https://glerl-proxy.edward-k-mui.workers.dev/?date=${y}${mm}${dd}`;
+}
+
 async function fetchGLERL() {
-  const url = getTodayUrl();
-  const resp = await fetch(url, { cache: 'no-store' });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const text = await resp.text();
-  const lines = text.split('\n').filter(l => l.trim().startsWith('4'));
-  return lines.map(parseLine).filter(Boolean);
+  // Fetch today and yesterday in parallel, merge, dedupe, sort
+  const [todayResp, yestResp] = await Promise.allSettled([
+    fetch(getTodayUrl(),       { cache: 'no-store' }),
+    fetch(getYesterdayUrl(),   { cache: 'no-store' })
+  ]);
+
+  const parseResp = async (result) => {
+    if (result.status !== 'fulfilled' || !result.value.ok) return [];
+    const text = await result.value.text();
+    const lines = text.split('\n').filter(l => l.trim().startsWith('4'));
+    return lines.map(parseLine).filter(Boolean);
+  };
+
+  const [todayData, yestData] = await Promise.all([
+    parseResp(todayResp),
+    parseResp(yestResp)
+  ]);
+
+  // Merge, dedupe by timestamp, sort ascending
+  const all = [...yestData, ...todayData];
+  const seen = new Set();
+  const deduped = all.filter(d => {
+    const key = `${d.year}-${d.doy}-${d.utc}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Sort by actual UTC time
+  deduped.sort((a, b) => {
+    const ta = Date.UTC(a.year, 0, a.doy, parseInt(a.utc.substring(0,2)), parseInt(a.utc.substring(2,4)));
+    const tb = Date.UTC(b.year, 0, b.doy, parseInt(b.utc.substring(0,2)), parseInt(b.utc.substring(2,4)));
+    return ta - tb;
+  });
+
+  return deduped;
 }
 
 // ═══════════════════════════════════════════════════
