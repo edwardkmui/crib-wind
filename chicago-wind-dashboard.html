@@ -3795,7 +3795,7 @@ function parseNWSObs(json) {
  */
 async function fetchStationNetwork() {
   const fetches = await Promise.allSettled([
-    fetch('https://www.ndbc.noaa.gov/data/realtime2/CNII2.txt')
+    fetch(getTodayUrl() + '?source=cnii2')
       .then(r => r.text()).then(t => ({ id: 'CNII2', raw: t, type: 'ndbc' })),
     fetch('https://api.weather.gov/stations/KORD/observations/latest',
       { headers: { 'User-Agent': 'CribWindDashboard/1.0' } })
@@ -4079,91 +4079,76 @@ async function fetchArchivePatterns() {
  * Find the best matching historical pattern for current conditions.
  * Returns { predSpd, predDir, confidence, matchScore, nMatches, label } or null.
  */
+function encodeArchiveKey(month, dirDeg, spdKts, hourCST) {
+  const octant = Math.round(((dirDeg % 360) + 360) % 360 / 45) % 8;
+  const band   = spdKts < 5 ? 0 : spdKts < 10 ? 1 : spdKts < 15 ? 2 : spdKts < 20 ? 3 : spdKts < 25 ? 4 : 5;
+  const hBlock = Math.floor(((hourCST % 24) + 24) % 24 / 3);
+  return `${month}_${octant}_${band}_${hBlock}`;
+}
+
 function matchArchivePattern(cribData) {
   if (!archivePatterns || typeof archivePatterns !== 'object') return null;
   if (!cribData || cribData.length < 10) return null;
 
   const latest  = cribData[cribData.length - 1];
-  const window10 = cribData.slice(-10);
   const now     = new Date();
-  const month   = now.getMonth() + 1; // 1–12
+  const month   = now.getMonth() + 1;
   const hourCST = ((now.getUTCHours() - 6 + 24) % 24);
+  const octant  = Math.round(((latest.dir % 360) + 360) % 360 / 45) % 8;
+  const band    = latest.spdKts < 5 ? 0 : latest.spdKts < 10 ? 1 : latest.spdKts < 15 ? 2 :
+                  latest.spdKts < 20 ? 3 : latest.spdKts < 25 ? 4 : 5;
+  const hBlock  = Math.floor(hourCST / 3);
+  const prevMon = month === 1 ? 12 : month - 1;
+  const nextMon = month === 12 ? 1 : month + 1;
 
-  const curDir   = degToCompass(latest.dir);
-  const curSpd   = latest.spdKts;
-  const curTrend = window10[window10.length-1].spdKts - window10[0].spdKts;
+  const exactKey = `${month}_${octant}_${band}_${hBlock}`;
+  const candidateKeys = [
+    exactKey,
+    `${prevMon}_${octant}_${band}_${hBlock}`,
+    `${nextMon}_${octant}_${band}_${hBlock}`,
+    band > 0 ? `${month}_${octant}_${band-1}_${hBlock}` : null,
+    band < 5 ? `${month}_${octant}_${band+1}_${hBlock}` : null,
+    `${month}_${(octant+1)%8}_${band}_${hBlock}`,
+    `${month}_${(octant+7)%8}_${band}_${hBlock}`,
+  ].filter(k => k && archivePatterns[k]);
 
-  // Score each pattern by similarity
-  // Normalise to array regardless of JSON shape
-  let patterns = null;
-  if (Array.isArray(archivePatterns)) patterns = archivePatterns;
-  else if (Array.isArray(archivePatterns?.patterns)) patterns = archivePatterns.patterns;
-  else if (Array.isArray(archivePatterns?.data))     patterns = archivePatterns.data;
-  else {
-    // Try values of top-level object keys
-    const vals = Object.values(archivePatterns || {});
-    patterns = vals.find(v => Array.isArray(v)) || null;
-  }
-  if (!patterns || patterns.length === 0) return null;
+  if (candidateKeys.length === 0) return null;
 
-  const scored = patterns
-    .filter(p => {
-      // Only compare same season (±1 month)
-      const mDiff = Math.abs((p.month || month) - month);
-      return mDiff <= 1 || mDiff >= 11;
-    })
-    .map(p => {
-      let score = 0;
-      // Direction match (most important)
-      const dirDiff = Math.abs(circDiff(latest.dir, p.dir_deg || 0));
-      score += Math.max(0, 40 - dirDiff);
-      // Speed match
-      const spdDiff = Math.abs(curSpd - (p.spd_kts || 0));
-      score += Math.max(0, 20 - spdDiff * 2);
-      // Trend match
-      const trendDiff = Math.abs(curTrend - (p.trend_kts || 0));
-      score += Math.max(0, 10 - trendDiff * 2);
-      // Hour-of-day match
-      const hDiff = Math.abs((p.hour || hourCST) - hourCST);
-      score += Math.max(0, 10 - hDiff);
-      return { ...p, score };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 20); // top 20 matches
-
-  if (scored.length === 0) return null;
-
-  // Weighted average of top matches' outcomes
-  const totalScore = scored.reduce((s, p) => s + p.score, 0);
-  if (totalScore === 0) return null;
-
-  let wSumSpd = 0, wSumSinDir = 0, wSumCosDir = 0;
-  scored.forEach(p => {
-    const w = p.score / totalScore;
-    wSumSpd += w * (p.outcome_spd_kts || p.spd_kts || curSpd);
-    const outDir = (p.outcome_dir_deg || p.dir_deg || latest.dir) * Math.PI / 180;
-    wSumSinDir += w * Math.sin(outDir);
-    wSumCosDir += w * Math.cos(outDir);
+  const exactEntry = archivePatterns[exactKey] || null;
+  let wSumSpd = 0, wSumSin = 0, wSumCos = 0, wTotal = 0;
+  candidateKeys.forEach(key => {
+    const e = archivePatterns[key];
+    if (!e) return;
+    const w = (key === exactKey ? 1.0 : 0.35) * Math.sqrt(e.n || 1);
+    wSumSpd += w * (e.p60_spd_mean || 0);
+    const rad = (e.p60_dir_mean || latest.dir) * Math.PI / 180;
+    wSumSin += w * Math.sin(rad);
+    wSumCos += w * Math.cos(rad);
+    wTotal  += w;
   });
 
-  const predSpd = wSumSpd;
-  let predDir = Math.atan2(wSumSinDir, wSumCosDir) * 180 / Math.PI;
+  if (wTotal === 0) return null;
+
+  const predSpd = wSumSpd / wTotal;
+  let predDir = Math.atan2(wSumSin / wTotal, wSumCos / wTotal) * 180 / Math.PI;
   predDir = ((predDir % 360) + 360) % 360;
 
-  // Confidence: based on top match score and spread of outcomes
-  const topScore = scored[0].score;
-  const matchConf = Math.min(85, Math.round(topScore * 1.2));
-  const label = topScore > 55 ? 'Strong match' : topScore > 35 ? 'Moderate match' : 'Weak match';
+  const n    = exactEntry ? (exactEntry.n || 0) : 0;
+  const conf = exactEntry ? (exactEntry.base_confidence || 55) : 45;
+  const label = n > 200 ? 'Strong' : n > 50 ? 'Moderate' : 'Weak';
 
-  archiveSignal = { predSpd, predDir, matchConf, matchScore: topScore, nMatches: scored.length, label };
+  archiveSignal = { predSpd, predDir, matchConf: conf, matchScore: n,
+                    nMatches: candidateKeys.length, label, key: exactKey, entry: exactEntry };
   return archiveSignal;
 }
 
 function getArchiveSignalWeight() {
-  if (!archiveSignal) return 0;
-  if (archiveSignal.matchScore > 55) return 0.10;
-  if (archiveSignal.matchScore > 35) return 0.07;
-  return 0.04;
+  if (!archiveSignal || !archiveSignal.entry) return 0;
+  const n = archiveSignal.matchScore;
+  if (n > 200) return 0.12;
+  if (n > 50)  return 0.08;
+  if (n > 10)  return 0.04;
+  return 0;
 }
 
 // ═══════════════════════════════════════════════════
