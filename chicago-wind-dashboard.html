@@ -1712,15 +1712,15 @@
       gap: 8px;
     }
     .brand-sub { display: none; }
-    .brand-name { font-size: 18px; }
+    .brand-name { font-size: 20px; }
 
     /* Collapse status bar items */
     .status-bar { gap: 10px; }
-    .update-time { font-size: 10px; }
-    .live-dot { font-size: 10px; }
+    .update-time { font-size: 13px; }
+    .live-dot { font-size: 13px; }
 
     /* Refresh button: icon only */
-    .refresh-btn { font-size: 16px; padding: 6px 10px; letter-spacing: 0; }
+    .refresh-btn { font-size: 18px; padding: 6px 10px; letter-spacing: 0; }
     .refresh-btn-text { display: none; }
 
     /* Main grid: tighter padding */
@@ -1729,20 +1729,33 @@
       gap: 12px;
     }
 
-    /* Hero wind number: bigger for glanceability */
-    .wind-speed-display { font-size: 72px; }
-    .wind-dir-text { font-size: 32px; }
-    .wind-deg { font-size: 14px; }
+    /* Section labels (those tiny all-caps headers) */
+    .section-label { font-size: 13px; letter-spacing: 0.12em; }
 
-    /* Mini stats: larger text */
-    .mini-stat-value { font-size: 22px; }
-    .mini-stat-label { font-size: 10px; }
+    /* Hero wind number: big and glanceable */
+    .wind-speed-display { font-size: 88px; }
+    .wind-unit { font-size: 17px; }
+    .wind-dir-text { font-size: 38px; }
+    .wind-deg { font-size: 16px; }
+
+    /* Mini stats (Gust / Temp / RH) */
+    .mini-stat-value { font-size: 26px; }
+    .mini-stat-label { font-size: 12px; }
+
+    /* Race condition score */
+    .meter-score { font-size: 42px; }
+    .meter-description { font-size: 14px; }
+    .meter-label { font-size: 12px; }
+    .meter-scale { font-size: 12px; }
 
     /* Chart: ensure it doesn't get squished */
     .chart-container { height: 200px; }
+    .sparkline-label { font-size: 12px; }
 
-    /* Bottom grid: already single-col via 1000px breakpoint,
-       but ensure panels don't have excess padding */
+    /* Tab buttons in chart header */
+    .tab { font-size: 13px; padding: 6px 16px; }
+
+    /* Bottom grid panels */
     .forecast-panel,
     .analysis-panel,
     .local-panel,
@@ -1753,34 +1766,92 @@
       padding: 16px;
     }
 
-    /* Pred +30/+60 cards: keep side-by-side (important numbers) */
-    .pred-30-row {
-      grid-template-columns: 1fr 1fr 1fr; /* keep 3-col */
-    }
-    .pred-30-value { font-size: 22px; }
+    /* Forecast list */
+    .forecast-time { font-size: 14px; }
+    .forecast-spd { font-size: 22px; }
+    .forecast-dir { font-size: 14px; }
+    .forecast-arrow { font-size: 24px; }
+    .forecast-badge { font-size: 13px; }
 
-    /* Pred main row: already goes to 1fr via 600px query above */
-    .pred-card-value { font-size: 28px; }
+    /* Trend analysis */
+    .trend-text { font-size: 15px; }
+    .trend-text strong { font-size: 16px; }
+    .trend-icon { font-size: 22px; }
 
-    /* Station grid: already 2-col at 900px, 1-col at 500px — ok */
+    /* Local knowledge / tip cards */
+    .tip-text { font-size: 15px; line-height: 1.7; }
+    .tip-condition { font-size: 12px; }
 
-    /* NWS / marine text: wrap it in summary/details via JS,
-       but also shrink base font */
-    .nws-period-text { font-size: 13px; line-height: 1.8; }
+    /* Prediction panel labels & values */
+    .pred-title { font-size: 20px; }
+    .pred-subtitle { font-size: 13px; }
+    .pred-card-label { font-size: 12px; }
+    .pred-card-value { font-size: 36px; }
+    .pred-card-unit { font-size: 14px; }
+    .pred-card-delta { font-size: 14px; }
+    .horizon-section-label { font-size: 12px; }
 
-    /* Meteo table: reduce padding so it fits */
-    .meteo-table td, .meteo-table th { padding: 6px 5px; font-size: 11px; }
+    /* Pred +30/+60 cards */
+    .pred-30-row { grid-template-columns: 1fr 1fr 1fr; }
+    .pred-30-label { font-size: 12px; }
+    .pred-30-value { font-size: 28px; }
+    .pred-30-unit { font-size: 12px; }
+    .pred-30-delta { font-size: 13px; }
 
-    /* Feed table: shrink */
-    .feed-table td, .feed-table th { padding: 6px 8px; font-size: 11px; }
+    /* Confidence ring */
+    .conf-pct { font-size: 26px; }
+    .conf-label { font-size: 12px; }
+    .conf-level-text { font-size: 15px; }
 
-    /* Signal grid: single column */
+    /* Signal breakdown */
     .signal-grid { grid-template-columns: 1fr; }
+    .signal-name { font-size: 14px; }
+    .signal-desc { font-size: 13px; }
+    .signal-value { font-size: 13px; }
+    .signal-weight { font-size: 12px; }
+    .pred-signals-title { font-size: 13px; }
 
-    /* Strategy sections: already 1-col at 700px */
+    /* Station cards */
+    .station-id { font-size: 16px; }
+    .station-name { font-size: 13px; }
+    .station-wind-spd { font-size: 28px; }
+    .station-wind-dir { font-size: 14px; }
+    .station-gust { font-size: 13px; }
+    .station-temp { font-size: 13px; }
+    .station-delta { font-size: 13px; }
+    .station-role { font-size: 11px; }
+    .station-network-title { font-size: 15px; }
 
-    /* Trend panel padding */
+    /* Marine / NWS */
+    .nws-period-name { font-size: 13px; }
+    .nws-period-text { font-size: 15px; line-height: 1.8; }
+    .marine-title { font-size: 17px; }
+    .marine-issued { font-size: 13px; }
+
+    /* Open-Meteo table */
+    .meteo-table td, .meteo-table th { padding: 7px 5px; font-size: 13px; }
+
+    /* Feed table (GLERL history) */
+    .feed-table td, .feed-table th { padding: 8px 8px; font-size: 13px; }
+
+    /* Strategy panel */
+    .strategy-title { font-size: 18px; }
+    .side-name { font-size: 24px; }
+    .side-reason { font-size: 14px; }
+    .strategy-bullet { font-size: 14px; }
+    .strategy-narrative { font-size: 15px; }
+    .strategy-meta { font-size: 13px; }
+
+    /* Trend panel */
     .trend-panel { padding: 16px; }
+
+    /* Inline badges & chips */
+    .inline-badge { font-size: 12px; }
+    .method-chip { font-size: 13px; }
+    .source-tag { font-size: 12px; }
+
+    /* Disclaimer */
+    .disclaimer-bar { font-size: 13px; }
   }
 </style>
 </head>
