@@ -3866,8 +3866,8 @@ function parseNWSObs(json) {
   if (!p) return null;
   return {
     dir:     p.windDirection?.value ?? null,
-    spdKts:  p.windSpeed?.value   != null ? p.windSpeed.value   * 1.94384 : null,
-    gustKts: p.windGust?.value    != null ? p.windGust.value    * 1.94384 : null,
+    spdKts:  p.windSpeed?.value   != null ? p.windSpeed.value   / 1.852 : null,  // NWS API sends km/h
+    gustKts: p.windGust?.value    != null ? p.windGust.value    / 1.852 : null,  // NWS API sends km/h
     tempC:   p.temperature?.value ?? null,
     dewC:    p.dewpoint?.value    ?? null,
     desc:    p.textDescription    ?? ''
